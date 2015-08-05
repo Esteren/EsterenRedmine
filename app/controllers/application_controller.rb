@@ -59,6 +59,8 @@ class ApplicationController < ActionController::Base
   include Redmine::MenuManager::MenuController
   helper Redmine::MenuManager::MenuHelper
 
+  include Redmine::SudoMode::Controller
+
   def session_expiration
     if session[:user_id]
       if session_expired? && !try_to_autologin
@@ -204,6 +206,7 @@ class ApplicationController < ActionController::Base
   def check_password_change
     if session[:pwd]
       if User.current.must_change_password?
+        flash[:error] = l(:error_password_expired)
         redirect_to my_password_path
       else
         session.delete(:pwd)
@@ -240,13 +243,16 @@ class ApplicationController < ActionController::Base
           if request.xhr?
             head :unauthorized
           else
-            redirect_to :controller => "account", :action => "login", :back_url => url
+            redirect_to signin_path(:back_url => url)
           end
         }
-        format.atom { redirect_to :controller => "account", :action => "login", :back_url => url }
+        format.any(:atom, :pdf, :csv) {
+          redirect_to signin_path(:back_url => url)
+        }
         format.xml  { head :unauthorized, 'WWW-Authenticate' => 'Basic realm="Redmine API"' }
         format.js   { head :unauthorized, 'WWW-Authenticate' => 'Basic realm="Redmine API"' }
         format.json { head :unauthorized, 'WWW-Authenticate' => 'Basic realm="Redmine API"' }
+        format.any  { head :unauthorized }
       end
       return false
     end
@@ -497,7 +503,7 @@ class ApplicationController < ActionController::Base
   end
 
   def render_feed(items, options={})
-    @items = items || []
+    @items = (items || []).to_a
     @items.sort! {|x,y| y.event_datetime <=> x.event_datetime }
     @items = @items.slice(0, Setting.feeds_limit.to_i)
     @title = options[:title] || Setting.app_title

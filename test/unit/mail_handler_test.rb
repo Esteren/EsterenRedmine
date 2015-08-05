@@ -22,6 +22,7 @@ require File.expand_path('../../test_helper', __FILE__)
 class MailHandlerTest < ActiveSupport::TestCase
   fixtures :users, :projects, :enabled_modules, :roles,
            :members, :member_roles, :users,
+           :email_addresses,
            :issues, :issue_statuses,
            :workflows, :trackers, :projects_trackers,
            :versions, :enumerations, :issue_categories,
@@ -91,6 +92,13 @@ class MailHandlerTest < ActiveSupport::TestCase
     issue.reload
     assert_equal Project.find(2), issue.project
     assert_equal IssueStatus.find_by_name("Resolved"), issue.status
+  end
+
+  def test_add_issue_should_accept_is_private_attribute
+    issue = submit_email('ticket_on_given_project.eml', :issue => {:is_private => '1'})
+    assert issue.is_a?(Issue)
+    assert !issue.new_record?
+    assert_equal true, issue.reload.is_private
   end
 
   def test_add_issue_with_attributes_override
@@ -223,6 +231,17 @@ class MailHandlerTest < ActiveSupport::TestCase
     assert_equal 1, issue.watcher_user_ids.size
   end
 
+  def test_add_issue_from_additional_email_address
+    user = User.find(2)
+    user.mail = 'mainaddress@somenet.foo'
+    user.save!
+    EmailAddress.create!(:user => user, :address => 'jsmith@somenet.foo')
+
+    issue = submit_email('ticket_on_given_project.eml')
+    assert issue
+    assert_equal user, issue.author
+  end
+
   def test_add_issue_by_unknown_user
     assert_no_difference 'User.count' do
       assert_equal false,
@@ -328,7 +347,7 @@ class MailHandlerTest < ActiveSupport::TestCase
       )
     end
     user = User.order('id DESC').first
-    assert_same_elements [group1, group2], user.groups
+    assert_equal [group1, group2].sort, user.groups.sort
   end
 
   def test_created_user_should_not_receive_account_information_with_no_account_info_option
@@ -411,9 +430,8 @@ class MailHandlerTest < ActiveSupport::TestCase
   end
 
   def test_add_issue_with_japanese_keywords
-    ja_dev = "\xe9\x96\x8b\xe7\x99\xba"
-    ja_dev.force_encoding('UTF-8') if ja_dev.respond_to?(:force_encoding)
-    tracker = Tracker.create!(:name => ja_dev)
+    ja_dev = "\xe9\x96\x8b\xe7\x99\xba".force_encoding('UTF-8')
+    tracker = Tracker.generate!(:name => ja_dev)
     Project.find(1).trackers << tracker
     issue = submit_email(
               'japanese_keywords_iso_2022_jp.eml',
@@ -447,8 +465,7 @@ class MailHandlerTest < ActiveSupport::TestCase
             )
     assert_kind_of Issue, issue
     assert_equal 1, issue.attachments.size
-    ja = "\xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88.txt"
-    ja.force_encoding('UTF-8') if ja.respond_to?(:force_encoding)
+    ja = "\xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88.txt".force_encoding('UTF-8')
     attachment = issue.attachments.first
     assert_equal ja, attachment.filename
     assert_equal 5, attachment.filesize
@@ -464,8 +481,7 @@ class MailHandlerTest < ActiveSupport::TestCase
             )
     assert_kind_of Issue, issue
     assert_equal 1, issue.attachments.size
-    ja = "\xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88.txt"
-    ja.force_encoding('UTF-8') if ja.respond_to?(:force_encoding)
+    ja = "\xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88.txt".force_encoding('UTF-8')
     attachment = issue.attachments.first
     assert_equal ja, attachment.filename
     assert_equal 5, attachment.filesize
@@ -481,10 +497,8 @@ class MailHandlerTest < ActiveSupport::TestCase
             )
     assert_kind_of Issue, issue
     assert_equal 1, issue.attachments.size
-    u = ""
-    u.force_encoding('UTF-8') if u.respond_to?(:force_encoding)
-    u1 = "\xc3\x84\xc3\xa4\xc3\x96\xc3\xb6\xc3\x9c\xc3\xbc"
-    u1.force_encoding('UTF-8') if u1.respond_to?(:force_encoding)
+    u = "".force_encoding('UTF-8')
+    u1 = "\xc3\x84\xc3\xa4\xc3\x96\xc3\xb6\xc3\x9c\xc3\xbc".force_encoding('UTF-8')
     11.times { u << u1 }
     attachment = issue.attachments.first
     assert_equal "#{u}.png", attachment.filename
@@ -501,10 +515,8 @@ class MailHandlerTest < ActiveSupport::TestCase
             )
     assert_kind_of Issue, issue
     assert_equal 1, issue.attachments.size
-    u = ""
-    u.force_encoding('UTF-8') if u.respond_to?(:force_encoding)
-    u1 = "\xc3\x84\xc3\xa4\xc3\x96\xc3\xb6\xc3\x9c\xc3\xbc"
-    u1.force_encoding('UTF-8') if u1.respond_to?(:force_encoding)
+    u = "".force_encoding('UTF-8')
+    u1 = "\xc3\x84\xc3\xa4\xc3\x96\xc3\xb6\xc3\x9c\xc3\xbc".force_encoding('UTF-8')
     11.times { u << u1 }
     attachment = issue.attachments.first
     assert_equal "#{u}.txt", attachment.filename
@@ -534,8 +546,7 @@ class MailHandlerTest < ActiveSupport::TestCase
               'subject_as_iso-8859-1.eml',
               :issue => {:project => 'ecookbook'}
             )
-    str = "Testmail from Webmail: \xc3\xa4 \xc3\xb6 \xc3\xbc..."
-    str.force_encoding('UTF-8') if str.respond_to?(:force_encoding)
+    str = "Testmail from Webmail: \xc3\xa4 \xc3\xb6 \xc3\xbc...".force_encoding('UTF-8')
     assert_kind_of Issue, issue
     assert_equal str, issue.subject
   end
@@ -546,8 +557,7 @@ class MailHandlerTest < ActiveSupport::TestCase
               :issue => {:project => 'ecookbook'}
             )
     assert_kind_of Issue, issue
-    str = "Freundliche Gr\xc3\xbcsse"
-    str.force_encoding('UTF-8') if str.respond_to?(:force_encoding)
+    str = "Freundliche Gr\xc3\xbcsse".force_encoding('UTF-8')
     assert_equal str, issue.description
   end
 
@@ -557,8 +567,7 @@ class MailHandlerTest < ActiveSupport::TestCase
               :issue => {:project => 'ecookbook'}
             )
     assert_kind_of Issue, issue
-    str = "Na \xc5\xa1triku se su\xc5\xa1i \xc5\xa1osi\xc4\x87."
-    str.force_encoding('UTF-8') if str.respond_to?(:force_encoding)
+    str = "Na \xc5\xa1triku se su\xc5\xa1i \xc5\xa1osi\xc4\x87.".force_encoding('UTF-8')
     assert issue.description.include?(str)
   end
 
@@ -568,26 +577,20 @@ class MailHandlerTest < ActiveSupport::TestCase
               :issue => {:project => 'ecookbook'}
             )
     assert_kind_of Issue, issue
-    ja = "\xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88"
-    ja.force_encoding('UTF-8') if ja.respond_to?(:force_encoding)
+    ja = "\xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88".force_encoding('UTF-8')
     assert_equal ja, issue.subject
   end
 
   def test_add_issue_with_korean_body
     # Make sure mail bodies with a charset unknown to Ruby
     # but known to the Mail gem 2.5.4 are handled correctly
-    kr = "\xEA\xB3\xA0\xEB\xA7\x99\xEC\x8A\xB5\xEB\x8B\x88\xEB\x8B\xA4."
-    if !kr.respond_to?(:force_encoding)
-      puts "\nOn Ruby 1.8, skip Korean encoding mail body test"
-    else
-      kr.force_encoding('UTF-8')
-      issue = submit_email(
-              'body_ks_c_5601-1987.eml',
-              :issue => {:project => 'ecookbook'}
-            )
-      assert_kind_of Issue, issue
-      assert_equal kr, issue.description
-    end
+    kr = "\xEA\xB3\xA0\xEB\xA7\x99\xEC\x8A\xB5\xEB\x8B\x88\xEB\x8B\xA4.".force_encoding('UTF-8')
+    issue = submit_email(
+            'body_ks_c_5601-1987.eml',
+            :issue => {:project => 'ecookbook'}
+          )
+    assert_kind_of Issue, issue
+    assert_equal kr, issue.description
   end
 
   def test_add_issue_with_no_subject_header
@@ -605,8 +608,7 @@ class MailHandlerTest < ActiveSupport::TestCase
               :issue => {:project => 'ecookbook'}
             )
     assert_kind_of Issue, issue
-    ja = "Re: \xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88"
-    ja.force_encoding('UTF-8') if ja.respond_to?(:force_encoding)
+    ja = "Re: \xe3\x83\x86\xe3\x82\xb9\xe3\x83\x88".force_encoding('UTF-8')
     assert_equal ja, issue.subject
   end
 
@@ -634,10 +636,10 @@ class MailHandlerTest < ActiveSupport::TestCase
   def test_should_ignore_auto_replied_emails
     MailHandler.any_instance.expects(:dispatch).never
     [
-      "X-Auto-Response-Suppress: OOF",
       "Auto-Submitted: auto-replied",
       "Auto-Submitted: Auto-Replied",
-      "Auto-Submitted: auto-generated"
+      "Auto-Submitted: auto-generated",
+      'X-Autoreply: yes'
     ].each do |header|
       raw = IO.read(File.join(FIXTURES_PATH, 'ticket_on_given_project.eml'))
       raw = header + "\n" + raw
@@ -795,13 +797,33 @@ class MailHandlerTest < ActiveSupport::TestCase
     assert_equal Message.find(1), m.parent
   end
 
-  def test_should_strip_tags_of_html_only_emails
-    issue = submit_email('ticket_html_only.eml', :issue => {:project => 'ecookbook'})
+  def test_should_convert_tags_of_html_only_emails
+    with_settings :text_formatting => 'textile' do
+      issue = submit_email('ticket_html_only.eml', :issue => {:project => 'ecookbook'})
+      assert issue.is_a?(Issue)
+      assert !issue.new_record?
+      issue.reload
+      assert_equal 'HTML email', issue.subject
+      assert_equal "This is a *html-only* email.\r\n\r\nh1. With a title\r\n\r\nand a paragraph.", issue.description
+    end
+  end
+
+  def test_should_handle_outlook_web_access_2010_html_only
+    issue = submit_email('outlook_web_access_2010_html_only.eml', :issue => {:project => 'ecookbook'})
     assert issue.is_a?(Issue)
-    assert !issue.new_record?
     issue.reload
-    assert_equal 'HTML email', issue.subject
-    assert_equal 'This is a html-only email.', issue.description
+    assert_equal 'Upgrade Redmine to 3.0.x', issue.subject
+    assert_equal "A mess.\r\n\r\n--Geoff Maciolek\r\nMYCOMPANYNAME, LLC", issue.description
+  end
+
+  def test_should_handle_outlook_2010_html_only
+    issue = submit_email('outlook_2010_html_only.eml', :issue => {:project => 'ecookbook'})
+    assert issue.is_a?(Issue)
+    issue.reload
+    assert_equal 'Test email', issue.subject
+    assert_equal "Simple, unadorned test email generated by Outlook 2010. It is in HTML format, but" +
+      " no special formatting has been chosen. I’m going to save this as a draft and then manually" +
+      " drop it into the Inbox for scraping by Redmine 3.0.2.", issue.description
   end
 
   test "truncate emails with no setting should add the entire email into the issue" do
@@ -934,10 +956,8 @@ class MailHandlerTest < ActiveSupport::TestCase
     end
     user = User.order('id DESC').first
     assert_equal "foo@example.org", user.mail
-    str1 = "\xc3\x84\xc3\xa4"
-    str2 = "\xc3\x96\xc3\xb6"
-    str1.force_encoding('UTF-8') if str1.respond_to?(:force_encoding)
-    str2.force_encoding('UTF-8') if str2.respond_to?(:force_encoding)
+    str1 = "\xc3\x84\xc3\xa4".force_encoding('UTF-8')
+    str2 = "\xc3\x96\xc3\xb6".force_encoding('UTF-8')
     assert_equal str1, user.firstname
     assert_equal str2, user.lastname
   end
@@ -953,6 +973,12 @@ class MailHandlerTest < ActiveSupport::TestCase
       :issue => {:tracker => 'defect', :project => 'foo'},
       :unknown_user => 'create'
     }, options)
+  end
+
+  def test_safe_receive_should_rescue_exceptions_and_return_false
+    MailHandler.stubs(:receive).raises(Exception.new "Something went wrong")
+
+    assert_equal false, MailHandler.safe_receive
   end
 
   private

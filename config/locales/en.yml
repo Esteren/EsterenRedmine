@@ -110,8 +110,8 @@ en:
         invalid: "is invalid"
         confirmation: "doesn't match confirmation"
         accepted: "must be accepted"
-        empty: "can't be empty"
-        blank: "can't be blank"
+        empty: "cannot be empty"
+        blank: "cannot be blank"
         too_long: "is too long (maximum is %{count} characters)"
         too_short: "is too short (minimum is %{count} characters)"
         wrong_length: "is the wrong length (should be %{count} characters)"
@@ -204,6 +204,7 @@ en:
   error_attachment_too_big: "This file cannot be uploaded because it exceeds the maximum allowed file size (%{max_size})"
   error_session_expired: "Your session has expired. Please login again."
   warning_attachments_not_saved: "%{count} file(s) could not be saved."
+  error_password_expired: "Your password has expired or the administrator requires you to change it."
 
   mail_subject_lost_password: "Your %{value} password"
   mail_body_lost_password: 'To change your password, click on the following link:'
@@ -227,6 +228,7 @@ en:
   field_firstname: First name
   field_lastname: Last name
   field_mail: Email
+  field_address: Email
   field_filename: File
   field_filesize: Size
   field_downloads: Downloads
@@ -337,6 +339,9 @@ en:
   field_inherit_members: Inherit members
   field_generate_password: Generate password
   field_must_change_passwd: Must change password at next logon
+  field_default_status: Default status
+  field_users_visibility: Users visibility
+  field_time_entries_visibility: Time logs visibility
 
   setting_app_title: Application title
   setting_app_subtitle: Application subtitle
@@ -383,6 +388,7 @@ en:
   setting_file_max_size_displayed: Maximum size of text files displayed inline
   setting_repository_log_display_limit: Maximum number of revisions displayed on file log
   setting_openid: Allow OpenID login and registration
+  setting_password_max_age: Require password change after
   setting_password_min_length: Minimum password length
   setting_new_project_user_role_id: Role given to a non-admin user who creates a project
   setting_default_projects_modules: Default enabled modules for new projects
@@ -410,6 +416,9 @@ en:
   setting_mail_handler_excluded_filenames: Exclude attachments by name
   setting_force_default_language_for_anonymous: Force default language for anonymous users
   setting_force_default_language_for_loggedin: Force default language for logged-in users
+  setting_link_copied_issue: Link issues on copy
+  setting_max_additional_emails: Maximum number of additional email addresses
+  setting_search_results_per_page: Search results per page
 
   permission_add_project: Create project
   permission_add_subprojects: Create subprojects
@@ -423,6 +432,7 @@ en:
   permission_view_issues: View Issues
   permission_add_issues: Add issues
   permission_edit_issues: Edit issues
+  permission_copy_issues: Copy issues
   permission_manage_issue_relations: Manage issue relations
   permission_set_issues_private: Set issues public or private
   permission_set_own_issues_private: Set own issues public or private
@@ -544,6 +554,7 @@ en:
   label_register: Register
   label_login_with_open_id_option: or login with OpenID
   label_password_lost: Lost password
+  label_password_required: Confirm your password to continue
   label_home: Home
   label_my_page: My page
   label_my_account: My account
@@ -641,7 +652,6 @@ en:
   label_used_by: Used by
   label_details: Details
   label_add_note: Add a note
-  label_per_page: Per page
   label_calendar: Calendar
   label_months_from: months from
   label_gantt: Gantt
@@ -918,6 +928,29 @@ en:
   label_check_for_updates: Check for updates
   label_latest_compatible_version: Latest compatible version
   label_unknown_plugin: Unknown plugin
+  label_add_projects: Add projects
+  label_users_visibility_all: All active users
+  label_users_visibility_members_of_visible_projects: Members of visible projects
+  label_edit_attachments: Edit attached files
+  label_link_copied_issue: Link copied issue
+  label_ask: Ask
+  label_search_attachments_yes: Search attachment filenames and descriptions
+  label_search_attachments_no: Do not search attachments
+  label_search_attachments_only: Search attachments only
+  label_search_open_issues_only: Open issues only
+  label_email_address_plural: Emails
+  label_email_address_add: Add email address
+  label_enable_notifications: Enable notifications
+  label_disable_notifications: Disable notifications
+  label_blank_value: blank
+  label_parent_task_attributes: Parent tasks attributes
+  label_parent_task_attributes_derived: Calculated from subtasks
+  label_parent_task_attributes_independent: Independent of subtasks
+  label_time_entries_visibility_all: All time entries
+  label_time_entries_visibility_own: Time entries created by the user
+  label_member_management: Member management
+  label_member_management_all_roles: All roles
+  label_member_management_selected_roles_only: Only these roles
 
   button_login: Login
   button_submit: Submit
@@ -1050,6 +1083,7 @@ en:
   text_zoom_out: Zoom out
   text_warn_on_leaving_unsaved: "The current page contains unsaved text that will be lost if you leave this page."
   text_scm_path_encoding_note: "Default: UTF-8"
+  text_subversion_repository_note: "Examples: file:///, http://, https://, svn://, svn+[tunnelscheme]://"
   text_git_repository_note: Repository is bare and local (e.g. /gitrepo, c:\gitrepo)
   text_mercurial_repository_note: Local repository (e.g. /hgrepo, c:\hgrepo)
   text_scm_command: Command

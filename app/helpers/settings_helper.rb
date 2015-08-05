@@ -79,7 +79,12 @@ module SettingsHelper
 
   def setting_label(setting, options={})
     label = options.delete(:label)
-    label != false ? label_tag("settings_#{setting}", l(label || "setting_#{setting}"), options[:label_options]).html_safe : ''
+    if label == false
+      ''
+    else
+      text = label.is_a?(String) ? label : l(label || "setting_#{setting}")
+      label_tag("settings_#{setting}", text, options[:label_options])
+    end
   end
 
   # Renders a notification field for a Redmine::Notifiable option
@@ -104,6 +109,16 @@ module SettingsHelper
     content_tag(:label, tag + text, options)
   end
 
+  def link_copied_issue_options
+    options = [
+      [:general_text_Yes, 'yes'],
+      [:general_text_No, 'no'],
+      [:label_ask, 'ask']
+    ]
+
+    options.map {|label, value| [l(label), value.to_s]}
+  end
+
   def cross_project_subtasks_options
     options = [
       [:label_disabled, ''],
@@ -114,5 +129,43 @@ module SettingsHelper
     ]
 
     options.map {|label, value| [l(label), value.to_s]}
+  end
+
+  def parent_issue_dates_options
+    options = [
+      [:label_parent_task_attributes_derived, 'derived'],
+      [:label_parent_task_attributes_independent, 'independent']
+    ]
+
+    options.map {|label, value| [l(label), value.to_s]}
+  end
+
+  def parent_issue_priority_options
+    options = [
+      [:label_parent_task_attributes_derived, 'derived'],
+      [:label_parent_task_attributes_independent, 'independent']
+    ]
+
+    options.map {|label, value| [l(label), value.to_s]}
+  end
+
+  def parent_issue_done_ratio_options
+    options = [
+      [:label_parent_task_attributes_derived, 'derived'],
+      [:label_parent_task_attributes_independent, 'independent']
+    ]
+
+    options.map {|label, value| [l(label), value.to_s]}
+  end
+
+  # Returns the options for the date_format setting
+  def date_format_setting_options(locale)
+    Setting::DATE_FORMATS.map do |f|
+      today = ::I18n.l(Date.today, :locale => locale, :format => f)
+      format = f.gsub('%', '').gsub(/[dmY]/) do
+        {'d' => 'dd', 'm' => 'mm', 'Y' => 'yyyy'}[$&]
+      end
+      ["#{today} (#{format})", f]
+    end
   end
 end

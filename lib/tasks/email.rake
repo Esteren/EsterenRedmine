@@ -77,7 +77,8 @@ General options:
 Available IMAP options:
   host=HOST                IMAP server host (default: 127.0.0.1)
   port=PORT                IMAP server port (default: 143)
-  ssl=SSL                  Use SSL? (default: false)
+  ssl=SSL                  Use SSL/TLS? (default: false)
+  starttls=STARTTLS        Use STARTTLS? (default: false)
   username=USERNAME        IMAP account
   password=PASSWORD        IMAP password
   folder=FOLDER            IMAP folder to read (default: INBOX)
@@ -88,6 +89,7 @@ Issue attributes control options:
   tracker=TRACKER          name of the target tracker
   category=CATEGORY        name of the target category
   priority=PRIORITY        name of the target priority
+  private                  create new issues as private
   allow_override=ATTRS     allow email content to override attributes
                            specified by previous options
                            ATTRS is a comma separated list of attributes
@@ -118,6 +120,7 @@ END_DESC
       imap_options = {:host => ENV['host'],
                       :port => ENV['port'],
                       :ssl => ENV['ssl'],
+                      :starttls => ENV['starttls'],
                       :username => ENV['username'],
                       :password => ENV['password'],
                       :folder => ENV['folder'],

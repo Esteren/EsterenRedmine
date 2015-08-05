@@ -28,6 +28,8 @@ module CustomFieldsHelper
      :label => :label_project_plural},
     {:name => 'VersionCustomField', :partial => 'custom_fields/index',
      :label => :label_version_plural},
+    {:name => 'DocumentCustomField', :partial => 'custom_fields/index',
+     :label => :label_document_plural},
     {:name => 'UserCustomField', :partial => 'custom_fields/index',
      :label => :label_user_plural},
     {:name => 'GroupCustomField', :partial => 'custom_fields/index',
@@ -75,11 +77,16 @@ module CustomFieldsHelper
       :class => "#{custom_value.custom_field.field_format}_cf"
   end
 
+  # Return custom field name tag
+  def custom_field_name_tag(custom_field)
+    title = custom_field.description.presence
+    content_tag 'span', custom_field.name, :title => title
+  end
+  
   # Return custom field label tag
   def custom_field_label_tag(name, custom_value, options={})
     required = options[:required] || custom_value.custom_field.is_required?
-    title = custom_value.custom_field.description.presence
-    content = content_tag 'span', custom_value.custom_field.name, :title => title
+    content = custom_field_name_tag custom_value.custom_field
 
     content_tag "label", content +
       (required ? " <span class=\"required\">*</span>".html_safe : ""),
@@ -115,6 +122,17 @@ module CustomFieldsHelper
   # Return an array of custom field formats which can be used in select_tag
   def custom_field_formats_for_select(custom_field)
     Redmine::FieldFormat.as_select(custom_field.class.customized_class.name)
+  end
+
+  # Yields the given block for each custom field value of object that should be
+  # displayed, with the custom field and the formatted value as arguments
+  def render_custom_field_values(object, &block)
+    object.visible_custom_field_values.each do |custom_value|
+      formatted = show_value(custom_value)
+      if formatted.present?
+        yield custom_value.custom_field, formatted
+      end
+    end
   end
 
   # Renders the custom_values in api views

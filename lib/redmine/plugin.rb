@@ -95,6 +95,11 @@ module Redmine #:nodoc:
         ActiveSupport::Dependencies.autoload_paths += [dir]
       end
 
+      # Defines plugin setting if present
+      if p.settings
+        Setting.define_plugin_setting p
+      end
+
       # Warn for potential settings[:partial] collisions
       if p.configurable?
         partial = p.settings[:partial]
@@ -354,11 +359,18 @@ module Redmine #:nodoc:
     # Registers a wiki formatter.
     #
     # Parameters:
-    # * +name+ - human-readable name
+    # * +name+ - formatter name
     # * +formatter+ - formatter class, which should have an instance method +to_html+
-    # * +helper+ - helper module, which will be included by wiki pages
-    def wiki_format_provider(name, formatter, helper)
-      Redmine::WikiFormatting.register(name, formatter, helper)
+    # * +helper+ - helper module, which will be included by wiki pages (optional)
+    # * +html_parser+ class reponsible for converting HTML to wiki text (optional)
+    # * +options+ - a Hash of options (optional)
+    #   * :label - label for the formatter displayed in application settings
+    #
+    # Examples:
+    #   wiki_format_provider(:custom_formatter, CustomFormatter, :label => "My custom formatter") 
+    #
+    def wiki_format_provider(name, *args)
+      Redmine::WikiFormatting.register(name, *args)
     end
 
     # Returns +true+ if the plugin can be configured.
@@ -420,7 +432,7 @@ module Redmine #:nodoc:
 
     # The directory containing this plugin's migrations (<tt>plugin/db/migrate</tt>)
     def migration_directory
-      File.join(Rails.root, 'plugins', id.to_s, 'db', 'migrate')
+      File.join(directory, 'db', 'migrate')
     end
 
     # Returns the version number of the latest migration for this plugin. Returns

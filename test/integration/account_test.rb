@@ -17,21 +17,15 @@
 
 require File.expand_path('../../test_helper', __FILE__)
 
-begin
-  require 'mocha/setup'
-rescue
-  # Won't run some tests
-end
-
-class AccountTest < ActionController::IntegrationTest
-  fixtures :users, :roles
+class AccountTest < Redmine::IntegrationTest
+  fixtures :users, :email_addresses, :roles
 
   def test_login
-    get "my/page"
+    get "/my/page"
     assert_redirected_to "/login?back_url=http%3A%2F%2Fwww.example.com%2Fmy%2Fpage"
     log_user('jsmith', 'jsmith')
 
-    get "my/account"
+    get "/my/account"
     assert_response :success
     assert_template "my/account"
   end
@@ -72,12 +66,13 @@ class AccountTest < ActionController::IntegrationTest
     Redmine::Configuration.stubs(:[]).with('autologin_cookie_name').returns('custom_autologin')
     Redmine::Configuration.stubs(:[]).with('autologin_cookie_path').returns('/')
     Redmine::Configuration.stubs(:[]).with('autologin_cookie_secure').returns(false)
+    Redmine::Configuration.stubs(:[]).with('sudo_mode_timeout').returns(15)
 
     with_settings :autologin => '7' do
       assert_difference 'Token.count' do
         post '/login', :username => 'admin', :password => 'admin', :autologin => 1
+        assert_response 302
       end
-      assert_response 302
       assert cookies['custom_autologin'].present?
       token = cookies['custom_autologin']
 
@@ -97,12 +92,12 @@ class AccountTest < ActionController::IntegrationTest
   def test_lost_password
     Token.delete_all
 
-    get "account/lost_password"
+    get "/account/lost_password"
     assert_response :success
     assert_template "account/lost_password"
     assert_select 'input[name=mail]'
 
-    post "account/lost_password", :mail => 'jSmith@somenet.foo'
+    post "/account/lost_password", :mail => 'jSmith@somenet.foo'
     assert_redirected_to "/login"
 
     token = Token.first
@@ -110,14 +105,14 @@ class AccountTest < ActionController::IntegrationTest
     assert_equal 'jsmith@somenet.foo', token.user.mail
     assert !token.expired?
 
-    get "account/lost_password", :token => token.value
+    get "/account/lost_password", :token => token.value
     assert_response :success
     assert_template "account/password_recovery"
     assert_select 'input[type=hidden][name=token][value=?]', token.value
     assert_select 'input[name=new_password]'
     assert_select 'input[name=new_password_confirmation]'
 
-    post "account/lost_password",
+    post "/account/lost_password",
          :token => token.value, :new_password => 'newpass123',
          :new_password_confirmation => 'newpass123'
     assert_redirected_to "/login"
@@ -156,14 +151,48 @@ class AccountTest < ActionController::IntegrationTest
     assert_equal false, User.find_by_login('jsmith').must_change_passwd?
   end
 
+  def test_user_with_expired_password_should_be_forced_to_change_its_password
+    User.find_by_login('jsmith').update_attribute :passwd_changed_on, 14.days.ago
+
+    with_settings :password_max_age => 7 do
+      post '/login', :username => 'jsmith', :password => 'jsmith'
+      assert_redirected_to '/my/page'
+      follow_redirect!
+      assert_redirected_to '/my/password'
+
+      get '/issues'
+      assert_redirected_to '/my/password'
+    end
+  end
+
+  def test_user_with_expired_password_should_be_able_to_change_its_password
+    User.find_by_login('jsmith').update_attribute :passwd_changed_on, 14.days.ago
+
+    with_settings :password_max_age => 7 do
+      post '/login', :username => 'jsmith', :password => 'jsmith'
+      assert_redirected_to '/my/page'
+      follow_redirect!
+      assert_redirected_to '/my/password'
+      follow_redirect!
+      assert_response :success
+      post '/my/password', :password => 'jsmith', :new_password => 'newpassword', :new_password_confirmation => 'newpassword'
+      assert_redirected_to '/my/account'
+      follow_redirect!
+      assert_response :success
+
+      assert_equal false, User.find_by_login('jsmith').must_change_passwd?
+    end
+
+  end
+
   def test_register_with_automatic_activation
     Setting.self_registration = '3'
 
-    get 'account/register'
+    get '/account/register'
     assert_response :success
     assert_template 'account/register'
 
-    post 'account/register',
+    post '/account/register',
          :user => {:login => "newuser", :language => "en",
                    :firstname => "New", :lastname => "User", :mail => "newuser@foo.bar",
                    :password => "newpass123", :password_confirmation => "newpass123"}
@@ -181,7 +210,7 @@ class AccountTest < ActionController::IntegrationTest
   def test_register_with_manual_activation
     Setting.self_registration = '2'
 
-    post 'account/register',
+    post '/account/register',
          :user => {:login => "newuser", :language => "en",
                    :firstname => "New", :lastname => "User", :mail => "newuser@foo.bar",
                    :password => "newpass123", :password_confirmation => "newpass123"}
@@ -193,7 +222,7 @@ class AccountTest < ActionController::IntegrationTest
     Setting.self_registration = '1'
     Token.delete_all
 
-    post 'account/register',
+    post '/account/register',
          :user => {:login => "newuser", :language => "en",
                    :firstname => "New", :lastname => "User", :mail => "newuser@foo.bar",
                    :password => "newpass123", :password_confirmation => "newpass123"}
@@ -205,7 +234,7 @@ class AccountTest < ActionController::IntegrationTest
     assert_equal 'newuser@foo.bar', token.user.mail
     assert !token.expired?
 
-    get 'account/activate', :token => token.value
+    get '/account/activate', :token => token.value
     assert_redirected_to '/login'
     log_user('newuser', 'newpass123')
   end
@@ -235,12 +264,12 @@ class AccountTest < ActionController::IntegrationTest
     post '/login', :username => 'foo', :password => 'bar'
     assert_response :success
     assert_template 'account/register'
-    assert_tag :input, :attributes => { :name => 'user[firstname]', :value => '' }
-    assert_tag :input, :attributes => { :name => 'user[lastname]', :value => 'Smith' }
-    assert_no_tag :input, :attributes => { :name => 'user[login]' }
-    assert_no_tag :input, :attributes => { :name => 'user[password]' }
+    assert_select 'input[name=?][value=""]', 'user[firstname]'
+    assert_select 'input[name=?][value=Smith]', 'user[lastname]'
+    assert_select 'input[name=?]', 'user[login]', 0
+    assert_select 'input[name=?]', 'user[password]', 0
 
-    post 'account/register',
+    post '/account/register',
          :user => {:firstname => 'Foo', :lastname => 'Smith', :mail => 'foo@bar.com'}
     assert_redirected_to '/my/account'
 
@@ -257,7 +286,7 @@ class AccountTest < ActionController::IntegrationTest
       # register a new account
       assert_difference 'User.count' do
         assert_difference 'Token.count' do
-          post 'account/register',
+          post '/account/register',
              :user => {:login => "newuser", :language => "en",
                        :firstname => "New", :lastname => "User", :mail => "newuser@foo.bar",
                        :password => "newpass123", :password_confirmation => "newpass123"}
@@ -275,7 +304,7 @@ class AccountTest < ActionController::IntegrationTest
       follow_redirect!
       assert_response :success
       assert_select 'div.flash', :text => /new activation email/
-      assert_select 'div.flash a[href=/account/activation_email]'
+      assert_select 'div.flash a[href="/account/activation_email"]'
 
       # request a new action activation email
       assert_difference 'ActionMailer::Base.deliveries.size' do

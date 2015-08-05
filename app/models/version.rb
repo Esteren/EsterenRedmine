@@ -22,6 +22,7 @@ class Version < ActiveRecord::Base
   has_many :fixed_issues, :class_name => 'Issue', :foreign_key => 'fixed_version_id', :dependent => :nullify
   acts_as_customizable
   acts_as_attachable :view_permission => :view_files,
+                     :edit_permission => :manage_files,
                      :delete_permission => :manage_files
 
   VERSION_STATUSES = %w(open locked closed)
@@ -34,11 +35,13 @@ class Version < ActiveRecord::Base
   validates :effective_date, :date => true
   validates_inclusion_of :status, :in => VERSION_STATUSES
   validates_inclusion_of :sharing, :in => VERSION_SHARINGS
+  attr_protected :id
 
   scope :named, lambda {|arg| where("LOWER(#{table_name}.name) = LOWER(?)", arg.to_s.strip)}
   scope :open, lambda { where(:status => 'open') }
   scope :visible, lambda {|*args|
-    includes(:project).where(Project.allowed_to_condition(args.first || User.current, :view_issues))
+    joins(:project).
+    where(Project.allowed_to_condition(args.first || User.current, :view_issues))
   }
 
   safe_attributes 'name',
@@ -80,7 +83,7 @@ class Version < ActiveRecord::Base
   # Returns the total estimated time for this version
   # (sum of leaves estimated_hours)
   def estimated_hours
-    @estimated_hours ||= fixed_issues.leaves.sum(:estimated_hours).to_f
+    @estimated_hours ||= fixed_issues.sum(:estimated_hours).to_f
   end
 
   # Returns the total reported time for this version
@@ -124,12 +127,6 @@ class Version < ActiveRecord::Base
     end
   end
 
-  # TODO: remove in Redmine 3.0
-  def completed_pourcent
-    ActiveSupport::Deprecation.warn "Version#completed_pourcent is deprecated and will be removed in Redmine 3.0. Please use #completed_percent instead."
-    completed_percent
-  end
-
   # Returns the percentage of issues that have been marked as 'closed'.
   def closed_percent
     if issues_count == 0
@@ -137,12 +134,6 @@ class Version < ActiveRecord::Base
     else
       issues_progress(false)
     end
-  end
-
-  # TODO: remove in Redmine 3.0
-  def closed_pourcent
-    ActiveSupport::Deprecation.warn "Version#closed_pourcent is deprecated and will be removed in Redmine 3.0. Please use #closed_percent instead."
-    closed_percent
   end
 
   # Returns true if the version is overdue: due date reached and some open issues
@@ -236,6 +227,10 @@ class Version < ActiveRecord::Base
     sharing != 'none'
   end
 
+  def deletable?
+    fixed_issues.empty? && !referenced_by_a_custom_field?
+  end
+
   private
 
   def load_issue_counts
@@ -296,5 +291,10 @@ class Version < ActiveRecord::Base
       end
       progress
     end
+  end
+
+  def referenced_by_a_custom_field?
+    CustomValue.joins(:custom_field).
+      where(:value => id.to_s, :custom_fields => {:field_format => 'version'}).any?
   end
 end

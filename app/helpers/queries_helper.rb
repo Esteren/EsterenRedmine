@@ -21,14 +21,35 @@ module QueriesHelper
   include ApplicationHelper
 
   def filters_options_for_select(query)
-    options_for_select(filters_options(query))
-  end
-
-  def filters_options(query)
-    options = [[]]
-    options += query.available_filters.map do |field, field_options|
-      [field_options[:name], field]
+    ungrouped = []
+    grouped = {}
+    query.available_filters.map do |field, field_options|
+      if [:tree, :relation].include?(field_options[:type]) 
+        group = :label_related_issues
+      elsif field =~ /^(.+)\./
+        # association filters
+        group = "field_#{$1}"
+      elsif %w(member_of_group assigned_to_role).include?(field)
+        group = :field_assigned_to
+      elsif field_options[:type] == :date_past || field_options[:type] == :date
+        group = :label_date
+      end
+      if group
+        (grouped[group] ||= []) << [field_options[:name], field]
+      else
+        ungrouped << [field_options[:name], field]
+      end
     end
+    # Don't group dates if there's only one (eg. time entries filters)
+    if grouped[:label_date].try(:size) == 1 
+      ungrouped << grouped.delete(:label_date).first
+    end
+    s = options_for_select([[]] + ungrouped)
+    if grouped.present?
+      localized_grouped = grouped.map {|k,v| [l(k), v]}
+      s << grouped_options_for_select(localized_grouped)
+    end
+    s
   end
 
   def query_filters_hidden_tags(query)
@@ -104,9 +125,8 @@ module QueriesHelper
     when :done_ratio
       progress_bar(value, :width => '80px')
     when :relations
-      other = value.other_issue(issue)
       content_tag('span',
-        (l(value.label_for(issue)) + " " + link_to_issue(other, :subject => false, :tracker => false)).html_safe,
+        value.to_s(issue) {|other| link_to_issue(other, :subject => false, :tracker => false)}.html_safe,
         :class => value.css_classes_for(issue))
     else
       format_object(value)
@@ -128,8 +148,7 @@ module QueriesHelper
       when 'Float'
         sprintf("%.2f", value).gsub('.', l(:general_csv_decimal_separator))
       when 'IssueRelation'
-        other = value.other_issue(object)
-        l(value.label_for(object)) + " ##{other.id}"
+        value.to_s(object)
       when 'Issue'
         if object.is_a?(TimeEntry)
           "#{value.tracker} ##{value.id}: #{value.subject}"
@@ -143,7 +162,6 @@ module QueriesHelper
   end
 
   def query_to_csv(items, query, options={})
-    encoding = l(:general_csv_encoding)
     columns = (options[:columns] == 'all' ? query.available_inline_columns : query.inline_columns)
     query.available_block_columns.each do |column|
       if options[column.name].present?
@@ -151,15 +169,14 @@ module QueriesHelper
       end
     end
 
-    export = FCSV.generate(:col_sep => l(:general_csv_separator)) do |csv|
+    Redmine::Export::CSV.generate do |csv|
       # csv header fields
-      csv << columns.collect {|c| Redmine::CodesetUtil.from_utf8(c.caption.to_s, encoding) }
+      csv << columns.map {|c| c.caption.to_s}
       # csv lines
       items.each do |item|
-        csv << columns.collect {|c| Redmine::CodesetUtil.from_utf8(csv_content(c, item), encoding) }
+        csv << columns.map {|c| csv_content(c, item)}
       end
     end
-    export
   end
 
   # Retrieve query from session or build a new query

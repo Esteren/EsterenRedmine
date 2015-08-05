@@ -2,9 +2,9 @@ require 'rexml/document'
 
 module Redmine
   module VERSION #:nodoc:
-    MAJOR = 2
-    MINOR = 6
-    TINY  = 6
+    MAJOR = 3
+    MINOR = 1
+    TINY  = 0
 
     # Branch values:
     # * official release: nil

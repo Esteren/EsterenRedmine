@@ -1,13 +1,15 @@
 <div class="contextual">
   &#171;
   <% unless @changeset.previous.nil? -%>
-    <%= link_to_revision(@changeset.previous, @repository, :text => l(:label_previous)) %>
+    <%= link_to_revision(@changeset.previous, @repository,
+      :text => l(:label_previous), :accesskey => accesskey(:previous)) %>
   <% else -%>
     <%= l(:label_previous) %>
   <% end -%>
 |
   <% unless @changeset.next.nil? -%>
-    <%= link_to_revision(@changeset.next, @repository, :text => l(:label_next)) %>
+    <%= link_to_revision(@changeset.next, @repository,
+      :text => l(:label_next), :accesskey => accesskey(:next)) %>
   <% else -%>
     <%= l(:label_next) %>
   <% end -%>
@@ -30,7 +32,7 @@
 <table class="revision-info">
   <% if @changeset.scmid.present? %>
     <tr>
-      <td>ID</td><td><%= h(@changeset.scmid) %></td>
+      <td>ID</td><td><%= @changeset.scmid %></td>
     </tr>
   <% end %>
   <% if @changeset.parents.present? %>

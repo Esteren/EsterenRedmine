@@ -45,7 +45,8 @@ class IssueQuery < Query
   scope :visible, lambda {|*args|
     user = args.shift || User.current
     base = Project.allowed_to_condition(user, :view_issues, *args)
-    scope = includes(:project).where("#{table_name}.project_id IS NULL OR (#{base})")
+    scope = joins("LEFT OUTER JOIN #{Project.table_name} ON #{table_name}.project_id = #{Project.table_name}.id").
+      where("#{table_name}.project_id IS NULL OR (#{base})")
 
     if user.admin?
       scope.where("#{table_name}.visibility <> ? OR #{table_name}.user_id = ?", VISIBILITY_PRIVATE, user.id)
@@ -130,19 +131,19 @@ class IssueQuery < Query
     issue_custom_fields = []
 
     if project
-      principals += project.principals.sort
+      principals += project.principals.visible
       unless project.leaf?
-        subprojects = project.descendants.visible.all
-        principals += Principal.member_of(subprojects)
+        subprojects = project.descendants.visible.to_a
+        principals += Principal.member_of(subprojects).visible
       end
-      versions = project.shared_versions.all
-      categories = project.issue_categories.all
+      versions = project.shared_versions.to_a
+      categories = project.issue_categories.to_a
       issue_custom_fields = project.all_issue_custom_fields
     else
       if all_projects.any?
-        principals += Principal.member_of(all_projects)
+        principals += Principal.member_of(all_projects).visible
       end
-      versions = Version.visible.where(:sharing => 'system').all
+      versions = Version.visible.where(:sharing => 'system').to_a
       issue_custom_fields = IssueCustomField.where(:is_for_all => true)
     end
     principals.uniq!
@@ -184,7 +185,7 @@ class IssueQuery < Query
       :type => :list_optional, :values => assigned_to_values
     ) unless assigned_to_values.empty?
 
-    group_values = Group.givable.collect {|g| [g.name, g.id.to_s] }
+    group_values = Group.givable.visible.collect {|g| [g.name, g.id.to_s] }
     add_available_filter("member_of_group",
       :type => :list_optional, :values => group_values
     ) unless group_values.empty?
@@ -240,6 +241,8 @@ class IssueQuery < Query
     IssueRelation::TYPES.each do |relation_type, options|
       add_available_filter relation_type, :type => :relation, :label => options[:name]
     end
+    add_available_filter "parent_id", :type => :tree, :label => :field_parent_issue
+    add_available_filter "child_id", :type => :tree, :label => :label_subtask_plural
 
     Tracker.disabled_core_fields(trackers).each {|field|
       delete_available_filter field
@@ -339,7 +342,7 @@ class IssueQuery < Query
       scope = scope.preload(:author)
     end
 
-    issues = scope.all
+    issues = scope.to_a
 
     if has_column?(:spent_hours)
       Issue.load_visible_spent_hours(issues)
@@ -360,12 +363,13 @@ class IssueQuery < Query
       joins(:status, :project).
       where(statement).
       includes(([:status, :project] + (options[:include] || [])).uniq).
+      references(([:status, :project] + (options[:include] || [])).uniq).
       where(options[:conditions]).
       order(order_option).
       joins(joins_for_order_statement(order_option.join(','))).
       limit(options[:limit]).
       offset(options[:offset]).
-      find_ids
+      pluck(:id)
   rescue ::ActiveRecord::StatementInvalid => e
     raise StatementInvalid.new(e.message)
   end
@@ -380,7 +384,7 @@ class IssueQuery < Query
       limit(options[:limit]).
       offset(options[:offset]).
       preload(:details, :user, {:issue => [:project, :author, :tracker, :status]}).
-      all
+      to_a
   rescue ::ActiveRecord::StatementInvalid => e
     raise StatementInvalid.new(e.message)
   end
@@ -392,7 +396,8 @@ class IssueQuery < Query
       where(project_statement).
       where(options[:conditions]).
       includes(:project).
-      all
+      references(:project).
+      to_a
   rescue ::ActiveRecord::StatementInvalid => e
     raise StatementInvalid.new(e.message)
   end
@@ -411,7 +416,7 @@ class IssueQuery < Query
       groups = Group.givable
       operator = '!' # Override the operator since we want to find by assigned_to
     else
-      groups = Group.where(:id => value).all
+      groups = Group.where(:id => value).to_a
     end
     groups ||= []
 
@@ -431,7 +436,7 @@ class IssueQuery < Query
         " WHERE #{Member.table_name}.project_id = #{Issue.table_name}.project_id))"
     when "=", "!"
       role_cond = value.any? ?
-        "#{MemberRole.table_name}.role_id IN (" + value.collect{|val| "'#{connection.quote_string(val)}'"}.join(",") + ")" :
+        "#{MemberRole.table_name}.role_id IN (" + value.collect{|val| "'#{self.class.connection.quote_string(val)}'"}.join(",") + ")" :
         "1=0"
 
       sw = operator == "!" ? 'NOT' : ''
@@ -443,9 +448,50 @@ class IssueQuery < Query
 
   def sql_for_is_private_field(field, operator, value)
     op = (operator == "=" ? 'IN' : 'NOT IN')
-    va = value.map {|v| v == '0' ? connection.quoted_false : connection.quoted_true}.uniq.join(',')
+    va = value.map {|v| v == '0' ? self.class.connection.quoted_false : self.class.connection.quoted_true}.uniq.join(',')
 
     "#{Issue.table_name}.is_private #{op} (#{va})"
+  end
+
+  def sql_for_parent_id_field(field, operator, value)
+    case operator
+    when "="
+      "#{Issue.table_name}.parent_id = #{value.first.to_i}"
+    when "~"
+      root_id, lft, rgt = Issue.where(:id => value.first.to_i).pluck(:root_id, :lft, :rgt).first
+      if root_id && lft && rgt
+        "#{Issue.table_name}.root_id = #{root_id} AND #{Issue.table_name}.lft > #{lft} AND #{Issue.table_name}.rgt < #{rgt}"
+      else
+        "1=0"
+      end
+    when "!*"
+      "#{Issue.table_name}.parent_id IS NULL"
+    when "*"
+      "#{Issue.table_name}.parent_id IS NOT NULL"
+    end
+  end
+
+  def sql_for_child_id_field(field, operator, value)
+    case operator
+    when "="
+      parent_id = Issue.where(:id => value.first.to_i).pluck(:parent_id).first
+      if parent_id
+        "#{Issue.table_name}.id = #{parent_id}"
+      else
+        "1=0"
+      end
+    when "~"
+      root_id, lft, rgt = Issue.where(:id => value.first.to_i).pluck(:root_id, :lft, :rgt).first
+      if root_id && lft && rgt
+        "#{Issue.table_name}.root_id = #{root_id} AND #{Issue.table_name}.lft < #{lft} AND #{Issue.table_name}.rgt > #{rgt}"
+      else
+        "1=0"
+      end
+    when "!*"
+      "#{Issue.table_name}.rgt - #{Issue.table_name}.lft = 1"
+    when "*"
+      "#{Issue.table_name}.rgt - #{Issue.table_name}.lft > 1"
+    end
   end
 
   def sql_for_relations(field, operator, value, options={})
@@ -462,14 +508,14 @@ class IssueQuery < Query
     sql = case operator
       when "*", "!*"
         op = (operator == "*" ? 'IN' : 'NOT IN')
-        "#{Issue.table_name}.id #{op} (SELECT DISTINCT #{IssueRelation.table_name}.#{join_column} FROM #{IssueRelation.table_name} WHERE #{IssueRelation.table_name}.relation_type = '#{connection.quote_string(relation_type)}')"
+        "#{Issue.table_name}.id #{op} (SELECT DISTINCT #{IssueRelation.table_name}.#{join_column} FROM #{IssueRelation.table_name} WHERE #{IssueRelation.table_name}.relation_type = '#{self.class.connection.quote_string(relation_type)}')"
       when "=", "!"
         op = (operator == "=" ? 'IN' : 'NOT IN')
-        "#{Issue.table_name}.id #{op} (SELECT DISTINCT #{IssueRelation.table_name}.#{join_column} FROM #{IssueRelation.table_name} WHERE #{IssueRelation.table_name}.relation_type = '#{connection.quote_string(relation_type)}' AND #{IssueRelation.table_name}.#{target_join_column} = #{value.first.to_i})"
+        "#{Issue.table_name}.id #{op} (SELECT DISTINCT #{IssueRelation.table_name}.#{join_column} FROM #{IssueRelation.table_name} WHERE #{IssueRelation.table_name}.relation_type = '#{self.class.connection.quote_string(relation_type)}' AND #{IssueRelation.table_name}.#{target_join_column} = #{value.first.to_i})"
       when "=p", "=!p", "!p"
         op = (operator == "!p" ? 'NOT IN' : 'IN')
         comp = (operator == "=!p" ? '<>' : '=')
-        "#{Issue.table_name}.id #{op} (SELECT DISTINCT #{IssueRelation.table_name}.#{join_column} FROM #{IssueRelation.table_name}, #{Issue.table_name} relissues WHERE #{IssueRelation.table_name}.relation_type = '#{connection.quote_string(relation_type)}' AND #{IssueRelation.table_name}.#{target_join_column} = relissues.id AND relissues.project_id #{comp} #{value.first.to_i})"
+        "#{Issue.table_name}.id #{op} (SELECT DISTINCT #{IssueRelation.table_name}.#{join_column} FROM #{IssueRelation.table_name}, #{Issue.table_name} relissues WHERE #{IssueRelation.table_name}.relation_type = '#{self.class.connection.quote_string(relation_type)}' AND #{IssueRelation.table_name}.#{target_join_column} = relissues.id AND relissues.project_id #{comp} #{value.first.to_i})"
       end
 
     if relation_options[:sym] == field && !options[:reverse]

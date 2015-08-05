@@ -198,7 +198,7 @@ de:
   button_uncheck_all: Alles abwählen
   button_unlock: Entsperren
   button_unwatch: Nicht beobachten
-  button_update: Bearbeiten
+  button_update: Aktualisieren
   button_view: Anzeigen
   button_watch: Beobachten
 
@@ -298,6 +298,7 @@ de:
   field_cvs_module: Modul
   field_cvsroot: CVSROOT
   field_default_value: Standardwert
+  field_default_status: Standardstatus
   field_delay: Pufferzeit
   field_description: Beschreibung
   field_done_ratio: "% erledigt"
@@ -383,6 +384,7 @@ de:
   field_updated_on: Aktualisiert
   field_url: URL
   field_user: Benutzer
+  field_users_visibility: Benutzer Sichtbarkeit
   field_value: Wert
   field_version: Version
   field_visible: Sichtbar
@@ -394,7 +396,7 @@ de:
   general_csv_separator: ';'
   general_pdf_fontname: freesans
   general_first_day_of_week: '1'
-  general_lang_name: 'Deutsch'
+  general_lang_name: 'German (Deutsch)'
   general_text_No: 'Nein'
   general_text_Yes: 'Ja'
   general_text_no: 'nein'
@@ -403,6 +405,7 @@ de:
   label_activity: Aktivität
   label_add_another_file: Eine weitere Datei hinzufügen
   label_add_note: Kommentar hinzufügen
+  label_add_projects: Projekt hinzufügen
   label_added: hinzugefügt
   label_added_time_by: "Von %{author} vor %{age} hinzugefügt"
   label_additional_workflow_transitions_for_assignee: Zusätzliche Berechtigungen wenn der Benutzer der Zugewiesene ist
@@ -421,6 +424,7 @@ de:
   label_api_access_key_created_on: Der API-Zugriffsschlüssel wurde vor %{value} erstellt
   label_applied_status: Zugewiesener Status
   label_ascending: Aufsteigend
+  label_ask: Nachfragen
   label_assigned_to_me_issues: Mir zugewiesene Tickets
   label_associated_revisions: Zugehörige Revisionen
   label_attachment: Datei
@@ -521,6 +525,7 @@ de:
   label_drop_down_list: Dropdown-Liste
   label_duplicated_by: Dupliziert durch
   label_duplicates: Duplikat von
+  label_edit_attachments: Angehängte Dateien bearbeiten
   label_end_to_end: Ende - Ende
   label_end_to_start: Ende - Anfang
   label_enumeration_new: Neuer Wert
@@ -607,6 +612,7 @@ de:
   label_less_or_equal: "<="
   label_less_than_ago: vor weniger als
   label_link: Link
+  label_link_copied_issue: Kopierte Tickets verlinken
   label_link_values_to: Werte mit URL verknüpfen
   label_list: Liste
   label_loading: Lade...
@@ -664,7 +670,7 @@ de:
   label_overview: Übersicht
   label_parent_revision: Vorgänger
   label_password_lost: Kennwort vergessen
-  label_per_page: Pro Seite
+  label_password_required: Bitte geben Sie Ihr Kennwort ein
   label_permissions: Berechtigungen
   label_permissions_report: Berechtigungsübersicht
   label_personalize_page: Diese Seite anpassen
@@ -716,7 +722,7 @@ de:
   label_roadmap: Roadmap
   label_roadmap_due_in: "Fällig in %{value}"
   label_roadmap_no_issues: Keine Tickets für diese Version
-  label_roadmap_overdue: "%{value} verspätet"
+  label_roadmap_overdue: "seit %{value} verspätet"
   label_role: Rolle
   label_role_and_permissions: Rollen und Rechte
   label_role_anonymous: Anonymous
@@ -782,6 +788,8 @@ de:
   label_user_new: Neuer Benutzer
   label_user_plural: Benutzer
   label_user_search: "Nach Benutzer suchen:"
+  label_users_visibility_all: Alle aktiven Benutzer
+  label_users_visibility_members_of_visible_projects: Mitglieder von sichtbaren Projekten
   label_version: Version
   label_version_new: Neue Version
   label_version_plural: Versionen
@@ -971,7 +979,7 @@ de:
   setting_app_title: Applikations-Titel
   setting_attachment_max_size: Max. Dateigröße
   setting_autofetch_changesets: Changesets automatisch abrufen
-  setting_autologin: Automatische Anmeldung
+  setting_autologin: Automatische Anmeldung läuft ab nach
   setting_bcc_recipients: E-Mails als Blindkopie (BCC) senden
   setting_cache_formatted_text: Formatierten Text im Cache speichern
   setting_commit_cross_project_ref: Erlauben auf Tickets aller anderen Projekte zu referenzieren
@@ -1008,6 +1016,7 @@ de:
   setting_issue_list_default_columns: Standard-Spalten in der Ticket-Auflistung
   setting_issues_export_limit: Max. Anzahl Tickets bei CSV/PDF-Export
   setting_jsonp_enabled: JSONP Unterstützung aktivieren
+  setting_link_copied_issue: Tickets beim kopieren verlinken
   setting_login_required: Authentifizierung erforderlich
   setting_mail_from: E-Mail-Absender
   setting_mail_handler_api_enabled: Abruf eingehender E-Mails aktivieren
@@ -1018,13 +1027,14 @@ de:
   setting_non_working_week_days: Arbeitsfreie Tage
   setting_openid: Erlaube OpenID-Anmeldung und -Registrierung
   setting_password_min_length: Mindestlänge des Kennworts
+  setting_password_max_age: Erzwinge Passwortwechsel nach
   setting_per_page_options: Objekte pro Seite
   setting_plain_text_mail: Nur reinen Text (kein HTML) senden
   setting_protocol: Protokoll
   setting_repositories_encodings: Enkodierung von Anhängen und Repositories
   setting_repository_log_display_limit: Maximale Anzahl anzuzeigender Revisionen in der Historie einer Datei
   setting_rest_api_enabled: REST-Schnittstelle aktivieren
-  setting_self_registration: Anmeldung ermöglicht
+  setting_self_registration: Registrierung ermöglichen
   setting_sequential_project_identifiers: Fortlaufende Projektkennungen generieren
   setting_session_lifetime: Längste Dauer einer Sitzung
   setting_session_timeout: Zeitüberschreitung bei Inaktivität
@@ -1102,6 +1112,7 @@ de:
   text_session_expiration_settings: "Achtung: Änderungen können aktuelle Sitzungen beenden, Ihre eingeschlossen!" 
   text_status_changed_by_changeset: "Status geändert durch Changeset %{value}."
   text_subprojects_destroy_warning: "Dessen Unterprojekte (%{value}) werden ebenfalls gelöscht."
+  text_subversion_repository_note: 'Beispiele: file:///, http://, https://, svn://, svn+[tunnelscheme]://'
   text_time_entries_destroy_confirmation: Sind Sie sicher, dass Sie die ausgewählten Zeitaufwände löschen möchten?
   text_time_logged_by_changeset: Angewendet in Changeset %{value}.
   text_tip_issue_begin_day: Aufgabe, die an diesem Tag beginnt
@@ -1128,3 +1139,27 @@ de:
   version_status_open: offen
 
   warning_attachments_not_saved: "%{count} Datei(en) konnten nicht gespeichert werden."
+  label_search_attachments_yes: Namen und Beschreibungen von Anhängen durchsuchen
+  label_search_attachments_no: Keine Anhänge suchen
+  label_search_attachments_only: Nur Anhänge suchen
+  label_search_open_issues_only: Nur offene Tickets
+  field_address: E-Mail
+  setting_max_additional_emails: Maximale Anzahl zusätzlicher E-Mailadressen
+  label_email_address_plural: E-Mails
+  label_email_address_add: E-Mailadresse hinzufügen
+  label_enable_notifications: Benachrichtigungen aktivieren
+  label_disable_notifications: Benachrichtigungen deaktivieren
+  setting_search_results_per_page: Suchergebnisse pro Seite
+  label_blank_value: leer
+  permission_copy_issues: Tickets kopieren
+  error_password_expired: Your password has expired or the administrator requires you
+    to change it.
+  field_time_entries_visibility: Time logs visibility
+  label_parent_task_attributes: Parent tasks attributes
+  label_parent_task_attributes_derived: Calculated from subtasks
+  label_parent_task_attributes_independent: Independent of subtasks
+  label_time_entries_visibility_all: All time entries
+  label_time_entries_visibility_own: Time entries created by the user
+  label_member_management: Member management
+  label_member_management_all_roles: All roles
+  label_member_management_selected_roles_only: Only these roles

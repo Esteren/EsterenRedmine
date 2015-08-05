@@ -142,7 +142,7 @@ it:
   general_text_Yes: 'Sì'
   general_text_no: 'no'
   general_text_yes: 'sì'
-  general_lang_name: 'Italiano'
+  general_lang_name: 'Italian (Italiano)'
   general_csv_separator: ';'
   general_csv_decimal_separator: ','
   general_csv_encoding: ISO-8859-1
@@ -404,7 +404,6 @@ it:
   label_used_by: Usato da
   label_details: Dettagli
   label_add_note: Aggiungi una nota
-  label_per_page: Per pagina
   label_calendar: Calendario
   label_months_from: mesi da
   label_gantt: Gantt
@@ -1115,3 +1114,38 @@ it:
   label_radio_buttons: radio buttons
   label_group_anonymous: Utenti anonimi
   label_group_non_member: Utenti non membri
+  label_add_projects: Aggiungi progetti
+  field_default_status: Stato predefinito
+  text_subversion_repository_note: 'Esempio: file:///, http://, https://, svn://, svn+[tunnelscheme]://'
+  field_users_visibility: Visibilità degli utenti
+  label_users_visibility_all: Tutti gli utenti attivi
+  label_users_visibility_members_of_visible_projects: Members of visible projects
+  label_edit_attachments: Modifica gli allegati
+  setting_link_copied_issue: Collega le segnalazioni dopo la copia
+  label_link_copied_issue: Collega le segnalazioni copiate
+  label_ask: Ask
+  label_search_attachments_yes: Cerca nel nome e nelle descrizioni degli allegati
+  label_search_attachments_no: Non cercare gli allegati
+  label_search_attachments_only: Cerca solo allegati
+  label_search_open_issues_only: Solo segnalazioni aperte
+  field_address: Email
+  setting_max_additional_emails: Numero massimo di email aggiuntive
+  label_email_address_plural: Emails
+  label_email_address_add: Aggiungi un'email
+  label_enable_notifications: Attiva le notifiche
+  label_disable_notifications: Disattiva le notifiche
+  setting_search_results_per_page: Risultati per pagina
+  label_blank_value: vuoto
+  permission_copy_issues: Copia segnalazioni
+  error_password_expired: La password è scaduta o l'amministratore ha richiesto che sia cambiata.
+  field_time_entries_visibility: Visibilità Time logs
+  setting_password_max_age: Richiesta cambio password dopo
+  label_parent_task_attributes: Attributi attività padre
+  label_parent_task_attributes_derived: Calcolati dalle sottoattività
+  label_parent_task_attributes_independent: Indipendente dalle sottoattività
+  label_time_entries_visibility_all: All time entries
+  label_time_entries_visibility_own: Time entries created by the user
+  label_member_management: Gestione membri
+  label_member_management_all_roles: Tutti i ruoli
+  label_member_management_selected_roles_only: Solo questi ruoli
+  label_password_required: Confirm your password to continue

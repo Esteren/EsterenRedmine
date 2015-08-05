@@ -1,7 +1,9 @@
 <h2><%= l(:label_home) %></h2>
 
 <div class="splitcontentleft">
-  <%= textilizable Setting.welcome_text %>
+  <div class="wiki">
+    <%= textilizable Setting.welcome_text %>
+  </div>
   <% if @news.any? %>
   <div class="news box">
   <h3><%=l(:label_news_latest)%></h3>
@@ -21,7 +23,9 @@
       <% @project = project %>
       <li>
       <%= link_to_project project %> (<%= format_time(project.created_on) %>)
-      <%= textilizable project.short_description, :project => project %>
+      <div class="wiki">
+        <%= textilizable project.short_description, :project => project %>
+      </div>
       </li>
     <% end %>
     <% @project = nil %>
