@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2016  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -90,6 +90,22 @@ class QueriesControllerTest < ActionController::TestCase
     assert !q.is_public?
     assert q.has_default_columns?
     assert q.valid?
+  end
+
+  def test_create_project_roles_query
+    @request.session[:user_id] = 2
+    post :create,
+         :project_id => 'ecookbook',
+         :default_columns => '1',
+         :fields => ["status_id", "assigned_to_id"],
+         :operators => {"assigned_to_id" => "=", "status_id" => "o"},
+         :values => { "assigned_to_id" => ["1"], "status_id" => ["1"]},
+         :query => {"name" => "test_create_project_roles_query", "visibility" => "1", "role_ids" => ["1", "2", ""]}
+
+    q = Query.find_by_name('test_create_project_roles_query')
+    assert_redirected_to :controller => 'issues', :action => 'index', :project_id => 'ecookbook', :query_id => q
+    assert_equal Query::VISIBILITY_ROLES, q.visibility
+    assert_equal [1, 2], q.roles.ids.sort
   end
 
   def test_create_global_private_query_with_custom_columns

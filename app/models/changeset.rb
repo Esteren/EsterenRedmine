@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2016  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -200,7 +200,7 @@ class Changeset < ActiveRecord::Base
   # Finds an issue that can be referenced by the commit message
   def find_referenced_issue_by_id(id)
     return nil if id.blank?
-    issue = Issue.includes(:project).where(:id => id.to_i).first
+    issue = Issue.find_by_id(id.to_i)
     if Setting.commit_cross_project_ref?
       # all issues can be referenced/fixed
     elsif issue

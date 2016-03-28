@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2016  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -108,6 +108,7 @@ private
     @query.name = params[:query] && params[:query][:name]
     if User.current.allowed_to?(:manage_public_queries, @query.project) || User.current.admin?
       @query.visibility = (params[:query] && params[:query][:visibility]) || IssueQuery::VISIBILITY_PRIVATE
+      @query.role_ids = params[:query] && params[:query][:role_ids]
     else
       @query.visibility = IssueQuery::VISIBILITY_PRIVATE
     end

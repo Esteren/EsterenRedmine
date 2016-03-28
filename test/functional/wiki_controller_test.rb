@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2016  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -21,7 +21,7 @@ class WikiControllerTest < ActionController::TestCase
   fixtures :projects, :users, :email_addresses, :roles, :members, :member_roles,
            :enabled_modules, :wikis, :wiki_pages, :wiki_contents,
            :wiki_content_versions, :attachments,
-           :issues, :issue_statuses
+           :issues, :issue_statuses, :trackers
 
   def setup
     User.current = nil
@@ -319,7 +319,7 @@ class WikiControllerTest < ActionController::TestCase
           put :update, :project_id => 1,
             :id => 'Another_page',
             :content => {
-              :comments => 'a' * 300,  # failure here, comment is too long
+              :comments => 'a' * 1300,  # failure here, comment is too long
               :text => 'edited'
             },
             :wiki_page => {
@@ -754,6 +754,18 @@ class WikiControllerTest < ActionController::TestCase
         end
       end
     end
+  end
+
+  def test_destroy_invalid_version_should_respond_with_404
+    @request.session[:user_id] = 2
+    assert_no_difference 'WikiContent::Version.count' do
+      assert_no_difference 'WikiContent.count' do
+        assert_no_difference 'WikiPage.count' do
+          delete :destroy_version, :project_id => 'ecookbook', :id => 'CookBook_documentation', :version => 99
+        end
+      end
+    end
+    assert_response 404
   end
 
   def test_index

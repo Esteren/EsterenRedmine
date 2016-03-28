@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2016  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -38,6 +38,7 @@ class Project < ActiveRecord::Base
   has_many :issues, :dependent => :destroy
   has_many :issue_changes, :through => :issues, :source => :journals
   has_many :versions, lambda {order("#{Version.table_name}.effective_date DESC, #{Version.table_name}.name DESC")}, :dependent => :destroy
+  belongs_to :default_version, :class_name => 'Version'
   has_many :time_entries, :dependent => :destroy
   has_many :queries, :class_name => 'IssueQuery', :dependent => :delete_all
   has_many :documents, :dependent => :destroy
@@ -110,6 +111,9 @@ class Project < ActiveRecord::Base
     end
   }
   scope :sorted, lambda {order(:lft)}
+  scope :having_trackers, lambda {
+    where("#{Project.table_name}.id IN (SELECT DISTINCT project_id FROM #{table_name_prefix}projects_trackers#{table_name_suffix})")
+  }
 
   def initialize(attributes=nil, *args)
     super
@@ -145,7 +149,10 @@ class Project < ActiveRecord::Base
   # returns latest created projects
   # non public projects will be returned only if user is a member of those
   def self.latest(user=nil, count=5)
-    visible(user).limit(count).order("created_on DESC").to_a
+    visible(user).limit(count).
+      order(:created_on => :desc).
+      where("#{table_name}.created_on >= ?", 30.days.ago).
+      to_a
   end
 
   # Returns true if the project is visible to +user+ or to the current user.
@@ -276,8 +283,8 @@ class Project < ActiveRecord::Base
           raise ActiveRecord::Rollback, "Overriding TimeEntryActivity was not successfully saved"
         else
           self.time_entries.
-            where(["activity_id = ?", parent_activity.id]).
-            update_all("activity_id = #{project_activity.id}")
+            where(:activity_id => parent_activity.id).
+            update_all(:activity_id => project_activity.id)
         end
       end
     end
@@ -329,8 +336,12 @@ class Project < ActiveRecord::Base
   end
 
   def to_param
-    # id is used for projects with a numeric identifier (compatibility)
-    @to_param ||= (identifier.to_s =~ %r{^\d*$} ? id.to_s : identifier)
+    if new_record?
+      nil
+    else
+      # id is used for projects with a numeric identifier (compatibility)
+      @to_param ||= (identifier.to_s =~ %r{^\d*$} ? id.to_s : identifier)
+    end
   end
 
   def active?
@@ -519,11 +530,17 @@ class Project < ActiveRecord::Base
   # Returns a scope of all custom fields enabled for project issues
   # (explicitly associated custom fields and custom fields enabled for all projects)
   def all_issue_custom_fields
-    @all_issue_custom_fields ||= IssueCustomField.
-      sorted.
-      where("is_for_all = ? OR id IN (SELECT DISTINCT cfp.custom_field_id" +
-        " FROM #{table_name_prefix}custom_fields_projects#{table_name_suffix} cfp" +
-        " WHERE cfp.project_id = ?)", true, id)
+    if new_record?
+      @all_issue_custom_fields ||= IssueCustomField.
+        sorted.
+        where("is_for_all = ? OR id IN (?)", true, issue_custom_field_ids)
+    else
+      @all_issue_custom_fields ||= IssueCustomField.
+        sorted.
+        where("is_for_all = ? OR id IN (SELECT DISTINCT cfp.custom_field_id" +
+          " FROM #{table_name_prefix}custom_fields_projects#{table_name_suffix} cfp" +
+          " WHERE cfp.project_id = ?)", true, id)
+    end
   end
 
   def project
@@ -531,7 +548,7 @@ class Project < ActiveRecord::Base
   end
 
   def <=>(project)
-    name.downcase <=> project.name.downcase
+    name.casecmp(project.name)
   end
 
   def to_s
@@ -674,7 +691,8 @@ class Project < ActiveRecord::Base
     'custom_fields',
     'tracker_ids',
     'issue_custom_field_ids',
-    'parent_id'
+    'parent_id',
+    'default_version_id'
 
   safe_attributes 'enabled_module_names',
     :if => lambda {|project, user| project.new_record? || user.allowed_to?(:select_project_modules, project) }
@@ -687,12 +705,14 @@ class Project < ActiveRecord::Base
     attrs = attrs.deep_dup
 
     @unallowed_parent_id = nil
-    parent_id_param = attrs['parent_id'].to_s
-    if parent_id_param.blank? || parent_id_param != parent_id.to_s
-      p = parent_id_param.present? ? Project.find_by_id(parent_id_param) : nil
-      unless allowed_parents(user).include?(p)
-        attrs.delete('parent_id')
-        @unallowed_parent_id = true
+    if new_record? || attrs.key?('parent_id')
+      parent_id_param = attrs['parent_id'].to_s
+      if new_record? || parent_id_param != parent_id.to_s
+        p = parent_id_param.present? ? Project.find_by_id(parent_id_param) : nil
+        unless allowed_parents(user).include?(p)
+          attrs.delete('parent_id')
+          @unallowed_parent_id = true
+        end
       end
     end
 
@@ -751,7 +771,7 @@ class Project < ActiveRecord::Base
     # clear unique attributes
     attributes = project.attributes.dup.except('id', 'name', 'identifier', 'status', 'parent_id', 'lft', 'rgt')
     copy = Project.new(attributes)
-    copy.enabled_modules = project.enabled_modules
+    copy.enabled_module_names = project.enabled_module_names
     copy.trackers = project.trackers
     copy.custom_values = project.custom_values.collect {|v| v.clone}
     copy.issue_custom_fields = project.issue_custom_fields
@@ -891,6 +911,22 @@ class Project < ActiveRecord::Base
       # Reassign fixed_versions by name, since names are unique per project
       if issue.fixed_version && issue.fixed_version.project == project
         new_issue.fixed_version = self.versions.detect {|v| v.name == issue.fixed_version.name}
+      end
+      # Reassign version custom field values
+      new_issue.custom_field_values.each do |custom_value|
+        if custom_value.custom_field.field_format == 'version' && custom_value.value.present?
+          versions = Version.where(:id => custom_value.value).to_a
+          new_value = versions.map do |version|
+            if version.project == project
+              self.versions.detect {|v| v.name == version.name}.try(:id)
+            else
+              version.id
+            end
+          end
+          new_value.compact!
+          new_value = new_value.first unless custom_value.custom_field.multiple?
+          custom_value.value = new_value
+        end
       end
       # Reassign the category by name, since names are unique per project
       if issue.category

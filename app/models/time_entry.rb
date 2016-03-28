@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2016  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -39,7 +39,7 @@ class TimeEntry < ActiveRecord::Base
 
   validates_presence_of :user_id, :activity_id, :project_id, :hours, :spent_on
   validates_numericality_of :hours, :allow_nil => true, :message => :invalid
-  validates_length_of :comments, :maximum => 255, :allow_nil => true
+  validates_length_of :comments, :maximum => 1024, :allow_nil => true
   validates :spent_on, :date => true
   before_validation :set_project_if_nil
   validate :validate_time_entry
@@ -95,7 +95,7 @@ class TimeEntry < ActiveRecord::Base
     if attrs
       attrs = super(attrs)
       if issue_id_changed? && issue
-        if user.allowed_to?(:log_time, issue.project)
+        if issue.visible?(user) && user.allowed_to?(:log_time, issue.project)
           if attrs[:project_id].blank? && issue.project_id != project_id
             self.project_id = issue.project_id
           end

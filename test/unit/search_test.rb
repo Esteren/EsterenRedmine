@@ -1,7 +1,7 @@
 # encoding: utf-8
 #
 # Redmine - project management software
-# Copyright (C) 2006-2015  Jean-Philippe Lang
+# Copyright (C) 2006-2016  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -188,6 +188,14 @@ class SearchTest < ActiveSupport::TestCase
     end
   ensure
     Redmine::Database.reset
+  end
+
+  def test_fetcher_should_handle_accents_in_phrases
+    f = Redmine::Search::Fetcher.new('No special chars "in a phrase"', User.anonymous, %w(issues), Project.all)
+    assert_equal ['No', 'special', 'chars', 'in a phrase'], f.tokens
+
+    f = Redmine::Search::Fetcher.new('Special chars "in a phrase Öö"', User.anonymous, %w(issues), Project.all)
+    assert_equal ['Special', 'chars', 'in a phrase Öö'], f.tokens
   end
 
   private
