@@ -20,7 +20,7 @@ require File.expand_path('../../test_helper', __FILE__)
 class MailerTest < ActiveSupport::TestCase
   include Redmine::I18n
   include Rails::Dom::Testing::Assertions
-  fixtures :projects, :enabled_modules, :issues, :users, :email_addresses, :members,
+  fixtures :projects, :enabled_modules, :issues, :users, :email_addresses, :user_preferences, :members,
            :member_roles, :roles, :documents, :attachments, :news,
            :tokens, :journals, :journal_details, :changesets,
            :trackers, :projects_trackers,
@@ -31,20 +31,16 @@ class MailerTest < ActiveSupport::TestCase
 
   def setup
     ActionMailer::Base.deliveries.clear
-    Setting.host_name = 'mydomain.foo'
-    Setting.protocol = 'http'
     Setting.plain_text_mail = '0'
     Setting.default_language = 'en'
     User.current = nil
   end
 
   def test_generated_links_in_emails
-    Setting.host_name = 'mydomain.foo'
-    Setting.protocol = 'https'
-
-    journal = Journal.find(3)
-    assert Mailer.deliver_issue_edit(journal)
-
+    with_settings :host_name => 'mydomain.foo', :protocol => 'https' do
+      journal = Journal.find(3)
+      assert Mailer.deliver_issue_edit(journal)
+    end
     mail = last_email
     assert_not_nil mail
 
@@ -68,7 +64,7 @@ class MailerTest < ActiveSupport::TestCase
                     # should be https://mydomain.foo/journals/diff/3?detail_id=4
                     # but the Rails 4.2 DOM assertion doesn't handle the ? in the
                     # attribute value
-                    'https://mydomain.foo/journals/diff/3',
+                    'https://mydomain.foo/journals/3/diff',
                     'View differences',
                     :text => 'diff'
       # link to an attachment
@@ -80,11 +76,10 @@ class MailerTest < ActiveSupport::TestCase
 
   def test_generated_links_with_prefix
     relative_url_root = Redmine::Utils.relative_url_root
-    Setting.host_name = 'mydomain.foo/rdm'
-    Setting.protocol = 'http'
-
-    journal = Journal.find(3)
-    assert Mailer.deliver_issue_edit(journal)
+    with_settings :host_name => 'mydomain.foo/rdm', :protocol => 'http' do
+      journal = Journal.find(3)
+      assert Mailer.deliver_issue_edit(journal)
+    end
 
     mail = last_email
     assert_not_nil mail
@@ -109,7 +104,7 @@ class MailerTest < ActiveSupport::TestCase
                     # should be http://mydomain.foo/rdm/journals/diff/3?detail_id=4
                     # but the Rails 4.2 DOM assertion doesn't handle the ? in the
                     # attribute value
-                    'http://mydomain.foo/rdm/journals/diff/3',
+                    'http://mydomain.foo/rdm/journals/3/diff',
                     'View differences',
                     :text => 'diff'
       # link to an attachment
@@ -143,18 +138,18 @@ class MailerTest < ActiveSupport::TestCase
     Mailer.deliver_issue_edit(journal)
     assert_not_nil last_email
     assert_select_email do
-      assert_select 'a[href=?]', 'http://mydomain.foo/issues/2', :text => 'Feature request #2'
+      assert_select 'a[href=?]', 'http://localhost:3000/issues/2', :text => 'Feature request #2'
     end
   end
 
   def test_generated_links_with_prefix_and_no_relative_url_root
     relative_url_root = Redmine::Utils.relative_url_root
-    Setting.host_name = 'mydomain.foo/rdm'
-    Setting.protocol = 'http'
     Redmine::Utils.relative_url_root = nil
 
-    journal = Journal.find(3)
-    assert Mailer.deliver_issue_edit(journal)
+    with_settings :host_name => 'mydomain.foo/rdm', :protocol => 'http' do
+      journal = Journal.find(3)
+      assert Mailer.deliver_issue_edit(journal)
+    end
 
     mail = last_email
     assert_not_nil mail
@@ -179,7 +174,7 @@ class MailerTest < ActiveSupport::TestCase
                     # should be http://mydomain.foo/rdm/journals/diff/3?detail_id=4
                     # but the Rails 4.2 DOM assertion doesn't handle the ? in the
                     # attribute value
-                    'http://mydomain.foo/rdm/journals/diff/3',
+                    'http://mydomain.foo/rdm/journals/3/diff',
                     'View differences',
                     :text => 'diff'
       # link to an attachment
@@ -285,7 +280,7 @@ class MailerTest < ActiveSupport::TestCase
     assert_select_email do
       # link to the update
       assert_select "a[href=?]",
-                    "http://mydomain.foo/issues/#{journal.journalized_id}#change-#{journal.id}"
+                    "http://localhost:3000/issues/#{journal.journalized_id}#change-#{journal.id}"
     end
   end
 
@@ -298,7 +293,7 @@ class MailerTest < ActiveSupport::TestCase
     assert_select_email do
       # link to the message
       assert_select "a[href=?]",
-                    "http://mydomain.foo/boards/#{message.board.id}/topics/#{message.id}",
+                    "http://localhost:3000/boards/#{message.board.id}/topics/#{message.id}",
                     :text => message.subject
     end
   end
@@ -312,7 +307,7 @@ class MailerTest < ActiveSupport::TestCase
     assert_select_email do
       # link to the reply
       assert_select "a[href=?]",
-                    "http://mydomain.foo/boards/#{message.board.id}/topics/#{message.root.id}?r=#{message.id}#message-#{message.id}",
+                    "http://localhost:3000/boards/#{message.board.id}/topics/#{message.root.id}?r=#{message.id}#message-#{message.id}",
                     :text => message.subject
     end
   end
@@ -474,7 +469,7 @@ class MailerTest < ActiveSupport::TestCase
     assert_not_nil last_email.bcc
     assert last_email.bcc.any?
     assert_select_email do
-      assert_select "a[href=?]", "http://mydomain.foo/projects/ecookbook/files"
+      assert_select "a[href=?]", "http://localhost:3000/projects/ecookbook/files"
     end
   end
 
@@ -484,7 +479,7 @@ class MailerTest < ActiveSupport::TestCase
     assert_not_nil last_email.bcc
     assert last_email.bcc.any?
     assert_select_email do
-      assert_select "a[href=?]", "http://mydomain.foo/projects/ecookbook/files"
+      assert_select "a[href=?]", "http://localhost:3000/projects/ecookbook/files"
     end
   end
 
@@ -529,7 +524,7 @@ class MailerTest < ActiveSupport::TestCase
         assert Mailer.wiki_content_added(content).deliver
         assert_select_email do
           assert_select 'a[href=?]',
-            'http://mydomain.foo/projects/ecookbook/wiki/CookBook_documentation',
+            'http://localhost:3000/projects/ecookbook/wiki/CookBook_documentation',
             :text => 'CookBook documentation'
         end
       end
@@ -543,7 +538,7 @@ class MailerTest < ActiveSupport::TestCase
         assert Mailer.wiki_content_updated(content).deliver
         assert_select_email do
           assert_select 'a[href=?]',
-            'http://mydomain.foo/projects/ecookbook/wiki/CookBook_documentation',
+            'http://localhost:3000/projects/ecookbook/wiki/CookBook_documentation',
             :text => 'CookBook documentation'
         end
       end
@@ -570,9 +565,6 @@ class MailerTest < ActiveSupport::TestCase
 
   def test_register
     token = Token.find(1)
-    Setting.host_name = 'redmine.foo'
-    Setting.protocol = 'https'
-
     valid_languages.each do |lang|
       token.user.update_attribute :language, lang.to_s
       token.reload
@@ -581,8 +573,8 @@ class MailerTest < ActiveSupport::TestCase
       mail = last_email
       assert_select_email do
         assert_select "a[href=?]",
-                      "https://redmine.foo/account/activate?token=#{token.value}",
-                      :text => "https://redmine.foo/account/activate?token=#{token.value}"
+                      "http://localhost:3000/account/activate?token=#{token.value}",
+                      :text => "http://localhost:3000/account/activate?token=#{token.value}"
       end
     end
   end
@@ -663,6 +655,51 @@ class MailerTest < ActiveSupport::TestCase
 
       mail = last_email
       assert mail.bcc.include?('dlopper@somenet.foo')
+    end
+  end
+
+  def test_security_notification
+    set_language_if_valid User.find(1).language
+    with_settings :emails_footer => "footer without link" do
+      User.current.remote_ip = '192.168.1.1'
+      assert Mailer.security_notification(User.find(1), message: :notice_account_password_updated).deliver
+      mail = last_email
+      assert_not_nil mail
+      assert_mail_body_match '192.168.1.1', mail
+      assert_mail_body_match I18n.t(:notice_account_password_updated), mail
+      assert_select_email do
+        assert_select "h1", false
+        assert_select "a", false
+      end
+    end
+  end
+
+  def test_security_notification_should_include_title
+    set_language_if_valid User.find(2).language
+    with_settings :emails_footer => "footer without link" do
+      assert Mailer.security_notification(User.find(2),
+        message: :notice_account_password_updated,
+        title: :label_my_account
+      ).deliver
+      assert_select_email do
+        assert_select "a", false
+        assert_select "h1", :text => I18n.t(:label_my_account)
+      end
+    end
+  end
+
+  def test_security_notification_should_include_link
+    set_language_if_valid User.find(3).language
+    with_settings :emails_footer => "footer without link" do
+      assert Mailer.security_notification(User.find(3),
+      message: :notice_account_password_updated,
+      title: :label_my_account,
+      url: {controller: 'my', action: 'account'}
+      ).deliver
+      assert_select_email do
+        assert_select "h1", false
+        assert_select 'a[href=?]', 'http://localhost:3000/my/account', :text => I18n.t(:label_my_account)
+      end
     end
   end
 

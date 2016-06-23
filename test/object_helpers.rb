@@ -60,13 +60,18 @@ module ObjectHelpers
     status
   end
 
-  def Tracker.generate!(attributes={})
+  def Tracker.generate(attributes={})
     @generated_tracker_name ||= 'Tracker 0'
     @generated_tracker_name.succ!
     tracker = Tracker.new(attributes)
     tracker.name = @generated_tracker_name.dup if tracker.name.blank?
     tracker.default_status ||= IssueStatus.order('position').first || IssueStatus.generate!
     yield tracker if block_given?
+    tracker
+  end
+
+  def Tracker.generate!(attributes={}, &block)
+    tracker = Tracker.generate(attributes, &block)
     tracker.save!
     tracker
   end
@@ -230,7 +235,7 @@ module ObjectHelpers
 
     import.settings = {
       'separator' => ";", 'wrapper' => '"', 'encoding' => "UTF-8",
-      'mapping' => {'project_id' => '1', 'tracker_id' => '2', 'subject' => '1'}
+      'mapping' => {'project_id' => '1', 'tracker' => '13', 'subject' => '1'}
     }
     import.save!
     import

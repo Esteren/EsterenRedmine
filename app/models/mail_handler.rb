@@ -62,7 +62,7 @@ class MailHandler < ActionMailer::Base
   # Use when receiving emails with rake tasks
   def self.extract_options_from_env(env)
     options = {:issue => {}}
-    %w(project status tracker category priority fixed_version).each do |option|
+    %w(project status tracker category priority assigned_to fixed_version).each do |option|
       options[:issue][option.to_sym] = env[option] if env[option]
     end
     %w(allow_override unknown_user no_permission_check no_account_notice default_group project_from_subaddress).each do |option|
@@ -199,14 +199,21 @@ class MailHandler < ActionMailer::Base
     end
 
     issue = Issue.new(:author => user, :project => project)
-    issue.safe_attributes = issue_attributes_from_keywords(issue)
+    attributes = issue_attributes_from_keywords(issue)
+    if handler_options[:no_permission_check]
+      issue.tracker_id = attributes['tracker_id']
+      if project
+        issue.tracker_id ||= project.trackers.first.try(:id)
+      end
+    end
+    issue.safe_attributes = attributes
     issue.safe_attributes = {'custom_field_values' => custom_field_values_from_keywords(issue)}
     issue.subject = cleaned_up_subject
     if issue.subject.blank?
       issue.subject = '(no subject)'
     end
     issue.description = cleaned_up_text_body
-    issue.start_date ||= Date.today if Setting.default_issue_start_date_to_creation_date?
+    issue.start_date ||= User.current.today if Setting.default_issue_start_date_to_creation_date?
     issue.is_private = (handler_options[:issue][:is_private] == '1')
 
     # add To and Cc as watchers before saving so the watchers can reply to Redmine
@@ -240,6 +247,9 @@ class MailHandler < ActionMailer::Base
     issue.safe_attributes = issue_attributes_from_keywords(issue)
     issue.safe_attributes = {'custom_field_values' => custom_field_values_from_keywords(issue)}
     journal.notes = cleaned_up_text_body
+
+    # add To and Cc as watchers before saving so the watchers can reply to Redmine
+    add_watchers(issue)
     add_attachments(issue)
     issue.save!
     if logger
@@ -287,7 +297,7 @@ class MailHandler < ActionMailer::Base
       email.attachments.each do |attachment|
         next unless accept_attachment?(attachment)
         obj.attachments << Attachment.create(:container => obj,
-                          :file => attachment.decoded,
+                          :file => attachment.body.decoded,
                           :filename => attachment.filename,
                           :author => user,
                           :content_type => attachment.mime_type)
@@ -311,11 +321,13 @@ class MailHandler < ActionMailer::Base
   # Adds To and Cc as watchers of the given object if the sender has the
   # appropriate permission
   def add_watchers(obj)
-    if user.allowed_to?("add_#{obj.class.name.underscore}_watchers".to_sym, obj.project)
+    if handler_options[:no_permission_check] || user.allowed_to?("add_#{obj.class.name.underscore}_watchers".to_sym, obj.project)
       addresses = [email.to, email.cc].flatten.compact.uniq.collect {|a| a.strip.downcase}
       unless addresses.empty?
-        User.active.having_mail(addresses).each do |w|
-          obj.add_watcher(w)
+        users = User.active.having_mail(addresses).to_a
+        users -= obj.watcher_users
+        users.each do |u|
+          obj.add_watcher(u)
         end
       end
     end
@@ -414,10 +426,6 @@ class MailHandler < ActionMailer::Base
       'estimated_hours' => get_keyword(:estimated_hours),
       'done_ratio' => get_keyword(:done_ratio, :format => '(\d|10)?0')
     }.delete_if {|k, v| v.blank? }
-
-    if issue.new_record? && attrs['tracker_id'].nil?
-      attrs['tracker_id'] = issue.project.trackers.first.try(:id)
-    end
 
     attrs
   end

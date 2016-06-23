@@ -60,6 +60,23 @@ class WikiController < ApplicationController
     @pages_by_date = @pages.group_by {|p| p.updated_on.to_date}
   end
 
+  def new
+    @page = WikiPage.new(:wiki => @wiki, :title => params[:title])
+    unless User.current.allowed_to?(:edit_wiki_pages, @project) && editable?
+      render_403
+    end
+    if request.post?
+      @page.validate
+      if @page.errors[:title].blank?
+        path = project_wiki_page_path(@project, @page.title)
+        respond_to do |format|
+          format.html { redirect_to path }
+          format.js   { render :js => "window.location = #{path.to_json}" }
+        end
+      end
+    end
+  end
+
   # display a page (in editing mode if it doesn't exist)
   def show
     if params[:version] && !User.current.allowed_to?(:view_wiki_edits, @project)
@@ -152,7 +169,7 @@ class WikiController < ApplicationController
     @content.author = User.current
 
     if @page.save_with_content(@content)
-      attachments = Attachment.attach_files(@page, params[:attachments])
+      attachments = Attachment.attach_files(@page, params[:attachments] || (params[:wiki_page] && params[:wiki_page][:uploads]))
       render_attachment_warning_if_needed(@page)
       call_hook(:controller_wiki_edit_after_save, { :params => params, :page => @page})
 

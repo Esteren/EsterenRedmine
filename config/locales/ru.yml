@@ -544,9 +544,9 @@ ru:
   label_language_based: На основе языка
   label_last_changes: "менее %{count} изменений"
   label_last_login: Последнее подключение
-  label_last_month: последний месяц
+  label_last_month: прошлый месяц
   label_last_n_days: "последние %{count} дней"
-  label_last_week: последняя неделя
+  label_last_week: прошлая неделя
   label_latest_revision: Последняя редакция
   label_latest_revision_plural: Последние редакции
   label_ldap_authentication: Авторизация с помощью LDAP
@@ -751,7 +751,7 @@ ru:
   mail_subject_reminder: "%{count} назначенных на Вас задач в ближайшие %{days} дней"
 
   notice_account_activated: Ваша учётная запись активирована. Вы можете войти.
-  notice_account_invalid_creditentials: Неправильное имя пользователя или пароль
+  notice_account_invalid_credentials: Неправильное имя пользователя или пароль
   notice_account_lost_email_sent: Вам отправлено письмо с инструкциями по выбору нового пароля.
   notice_account_password_updated: Пароль успешно обновлён.
   notice_account_pending: "Ваша учётная запись создана и ожидает подтверждения администратора."
@@ -1140,7 +1140,7 @@ ru:
   notice_user_successful_create: Пользователь %{id} создан.
   field_core_fields: Стандартные поля
   field_timeout: Таймаут (в секундах)
-  setting_thumbnails_enabled: Отображать превью для приложений
+  setting_thumbnails_enabled: Отображать превью для вложений
   setting_thumbnails_size: Размер первью (в пикселях)
   label_status_transitions: Статус-переходы
   label_fields_permissions: Права на изменения полей
@@ -1163,10 +1163,10 @@ ru:
   label_no_issues_in_project: нет задач в проекте
   label_any: все
   label_last_n_weeks:
-    one:   "последняя %{count} неделя"
-    few:   "последние %{count} недели"
-    many:  "последние %{count} недель"
-    other: "последние %{count} недели"
+    one:   "прошлая %{count} неделя"
+    few:   "прошлые %{count} недели"
+    many:  "прошлые %{count} недель"
+    other: "прошлые %{count} недели"
   setting_cross_project_subtasks: Разрешить подзадачи между проектами
   label_cross_project_descendants: С подпроектами
   label_cross_project_tree: С деревом проектов
@@ -1251,8 +1251,8 @@ ru:
   label_member_management_selected_roles_only: Только эти роли
   label_password_required: Для продолжения введите свой пароль
   label_total_spent_time: Всего затрачено времени
-  notice_import_finished: Все %{count} элемент(а, ов) были импортированы.
-  notice_import_finished_with_errors: ! '%{count} из %{total} элемент(а, ов) не могут быть импортированы.'
+  notice_import_finished: "%{count} элемент(а, ов) были импортированы"
+  notice_import_finished_with_errors: "%{count} из %{total} элемент(а, ов) не могут быть импортированы"
   error_invalid_file_encoding: Кодировка файла не соответствует выбранной %{encoding}
   error_invalid_csv_file_or_settings: Файл не является файлом CSV или не соответствует представленным настройкам
   error_can_not_read_import_file: Во время чтения файла для импорта произошла ошибка
@@ -1283,3 +1283,28 @@ ru:
   label_any_open_issues: любые открытые задачи
   label_no_open_issues: нет открытых задач
   label_default_values_for_new_users: Default values for new users
+  error_ldap_bind_credentials: Invalid LDAP Account/Password
+  setting_sys_api_key: API ключ
+  setting_lost_password: Восстановление пароля
+  mail_subject_security_notification: Security notification
+  mail_body_security_notification_change: ! '%{field} was changed.'
+  mail_body_security_notification_change_to: ! '%{field} was changed to %{value}.'
+  mail_body_security_notification_add: ! '%{field} %{value} was added.'
+  mail_body_security_notification_remove: ! '%{field} %{value} was removed.'
+  mail_body_security_notification_notify_enabled: Email address %{value} now receives
+    notifications.
+  mail_body_security_notification_notify_disabled: Email address %{value} no longer
+    receives notifications.
+  mail_body_settings_updated: ! 'The following settings were changed:'
+  field_remote_ip: IP address
+  label_wiki_page_new: New wiki page
+  label_relations: Relations
+  button_filter: Filter
+  mail_body_password_updated: Your password has been changed.
+  label_no_preview: No preview available
+  error_no_tracker_allowed_for_new_issue_in_project: The project doesn't have any trackers
+    for which you can create an issue
+  label_tracker_all: All trackers
+  label_new_project_issue_tab_enabled: Display the "New issue" tab
+  setting_new_item_menu_tab: Project menu tab for creating new objects
+  label_new_object_tab_enabled: Display the "+" drop-down

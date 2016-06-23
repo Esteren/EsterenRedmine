@@ -25,7 +25,8 @@ class UserTest < ActiveSupport::TestCase
             :issue_categories, :enumerations, :issues,
             :journals, :journal_details,
             :groups_users,
-            :enabled_modules
+            :enabled_modules,
+            :tokens
 
   include Redmine::I18n
 
@@ -49,6 +50,14 @@ class UserTest < ActiveSupport::TestCase
 
   def test_truth
     assert_kind_of User, @jsmith
+  end
+
+  def test_should_validate_status
+    user = User.new
+    user.status = 0
+
+    assert !user.save
+    assert_include I18n.translate('activerecord.errors.messages.invalid'), user.errors[:status]
   end
 
   def test_mail_should_be_stripped

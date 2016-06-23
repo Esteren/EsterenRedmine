@@ -22,13 +22,13 @@ class AttachmentsController < ApplicationController
   before_filter :delete_authorize, :only => :destroy
   before_filter :authorize_global, :only => :upload
 
-  accept_api_auth :show, :download, :thumbnail, :upload
+  accept_api_auth :show, :download, :thumbnail, :upload, :destroy
 
   def show
     respond_to do |format|
       format.html {
         if @attachment.is_diff?
-          @diff = File.new(@attachment.diskfile, "rb").read
+          @diff = File.read(@attachment.diskfile, :mode => "rb")
           @diff_type = params[:type] || User.current.pref[:diff_type] || 'inline'
           @diff_type = 'inline' unless %w(inline sbs).include?(@diff_type)
           # Save diff type as user preference
@@ -38,10 +38,12 @@ class AttachmentsController < ApplicationController
           end
           render :action => 'diff'
         elsif @attachment.is_text? && @attachment.filesize <= Setting.file_max_size_displayed.to_i.kilobyte
-          @content = File.new(@attachment.diskfile, "rb").read
+          @content = File.read(@attachment.diskfile, :mode => "rb")
           render :action => 'file'
+        elsif @attachment.is_image?
+          render :action => 'image'
         else
-          download
+          render :action => 'other'
         end
       }
       format.api
@@ -57,7 +59,7 @@ class AttachmentsController < ApplicationController
       # images are sent inline
       send_file @attachment.diskfile, :filename => filename_for_content_disposition(@attachment.filename),
                                       :type => detect_content_type(@attachment),
-                                      :disposition => (@attachment.image? ? 'inline' : 'attachment')
+                                      :disposition => disposition(@attachment)
     end
   end
 
@@ -128,6 +130,7 @@ class AttachmentsController < ApplicationController
     respond_to do |format|
       format.html { redirect_to_referer_or project_path(@project) }
       format.js
+      format.api { render_api_ok }
     end
   end
 
@@ -187,5 +190,13 @@ class AttachmentsController < ApplicationController
       content_type = Redmine::MimeType.of(attachment.filename)
     end
     content_type.to_s
+  end
+
+  def disposition(attachment)
+    if attachment.is_image? || attachment.is_pdf?
+      'inline'
+    else
+      'attachment'
+    end
   end
 end

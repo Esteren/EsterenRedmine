@@ -106,15 +106,15 @@ module IssuesHelper
 
   def render_descendants_tree(issue)
     s = '<form><table class="list issues">'
-    issue_list(issue.descendants.visible.preload(:status, :priority, :tracker).sort_by(&:lft)) do |child, level|
-      css = "issue issue-#{child.id} hascontextmenu"
+    issue_list(issue.descendants.visible.preload(:status, :priority, :tracker, :assigned_to).sort_by(&:lft)) do |child, level|
+      css = "issue issue-#{child.id} hascontextmenu #{issue.css_classes}"
       css << " idnt idnt-#{level}" if level > 0
       s << content_tag('tr',
              content_tag('td', check_box_tag("ids[]", child.id, false, :id => nil), :class => 'checkbox') +
              content_tag('td', link_to_issue(child, :project => (issue.project_id != child.project_id)), :class => 'subject', :style => 'width: 50%') +
-             content_tag('td', h(child.status)) +
-             content_tag('td', link_to_user(child.assigned_to)) +
-             content_tag('td', child.disabled_core_fields.include?('done_ratio') ? '' : progress_bar(child.done_ratio)),
+             content_tag('td', h(child.status), :class => 'status') +
+             content_tag('td', link_to_user(child.assigned_to), :class => 'assigned_to') +
+             content_tag('td', child.disabled_core_fields.include?('done_ratio') ? '' : progress_bar(child.done_ratio), :class=> 'done_ratio'),
              :class => css)
     end
     s << '</table></form>'
@@ -162,10 +162,20 @@ module IssuesHelper
   # Returns a link for adding a new subtask to the given issue
   def link_to_new_subtask(issue)
     attrs = {
-      :tracker_id => issue.tracker,
       :parent_issue_id => issue
     }
+    attrs[:tracker_id] = issue.tracker unless issue.tracker.disabled_core_fields.include?('parent_issue_id')
     link_to(l(:button_add), new_project_issue_path(issue.project, :issue => attrs))
+  end
+
+  def trackers_options_for_select(issue)
+    trackers = issue.allowed_target_trackers
+    if issue.new_record? && issue.parent_issue_id.present?
+      trackers = trackers.reject do |tracker|
+        issue.tracker_id != tracker.id && tracker.disabled_core_fields.include?('parent_issue_id')
+      end
+    end
+    trackers.collect {|t| [t.name, t.id]}
   end
 
   class IssueFieldsRows
@@ -382,8 +392,8 @@ module IssuesHelper
         old_value = find_name_by_reflection(field, detail.old_value)
 
       when 'estimated_hours'
-        value = "%0.02f" % detail.value.to_f unless detail.value.blank?
-        old_value = "%0.02f" % detail.old_value.to_f unless detail.old_value.blank?
+        value = l_hours_short(detail.value.to_f) unless detail.value.blank?
+        old_value = l_hours_short(detail.old_value.to_f) unless detail.old_value.blank?
 
       when 'parent_id'
         label = l(:field_parent_issue)
@@ -441,12 +451,13 @@ module IssuesHelper
           atta = detail.journal.journalized.attachments.detect {|a| a.id == detail.prop_key.to_i}
         # Link to the attachment if it has not been removed
         value = link_to_attachment(atta, :download => true, :only_path => options[:only_path])
-        if options[:only_path] != false && atta.is_text?
-          value += link_to(
-                       image_tag('magnifier.png'),
-                       :controller => 'attachments', :action => 'show',
-                       :id => atta, :filename => atta.filename
-                     )
+        if options[:only_path] != false && (atta.is_text? || atta.is_image?)
+          value += ' '
+          value += link_to(l(:button_view),
+                           { :controller => 'attachments', :action => 'show',
+                             :id => atta, :filename => atta.filename },
+                           :class => 'icon-only icon-magnifier',
+                           :title => l(:button_view))
         end
       else
         value = content_tag("i", h(value)) if value
@@ -457,8 +468,7 @@ module IssuesHelper
       s = l(:text_journal_changed_no_detail, :label => label)
       unless no_html
         diff_link = link_to 'diff',
-          {:controller => 'journals', :action => 'diff', :id => detail.journal_id,
-           :detail_id => detail.id, :only_path => options[:only_path]},
+          diff_journal_url(detail.journal_id, :detail_id => detail.id, :only_path => options[:only_path]),
           :title => l(:label_view_diff)
         s << " (#{ diff_link })"
       end

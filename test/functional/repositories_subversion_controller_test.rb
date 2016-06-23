@@ -168,7 +168,7 @@ class RepositoriesSubversionControllerTest < ActionController::TestCase
       assert_template 'entry'
     end
 
-    def test_entry_should_send_if_too_big
+    def test_entry_should_show_other_if_too_big
       assert_equal 0, @repository.changesets.count
       @repository.fetch_changesets
       @project.reload
@@ -178,16 +178,16 @@ class RepositoriesSubversionControllerTest < ActionController::TestCase
         get :entry, :id => PRJ_ID,
             :path => repository_path_hash(['subversion_test', 'helloworld.c'])[:param]
         assert_response :success
-        assert_equal 'attachment; filename="helloworld.c"',
-                     @response.headers['Content-Disposition']
+        assert_equal 'text/html', @response.content_type
+        assert_select 'p.nodata'
       end
     end
 
-    def test_entry_should_send_images_inline
+    def test_entry_should_display_images
       get :entry, :id => PRJ_ID,
           :path => repository_path_hash(['subversion_test', 'folder', 'subfolder', 'rubylogo.gif'])[:param]
       assert_response :success
-      assert_equal 'inline; filename="rubylogo.gif"', response.headers['Content-Disposition']
+      assert_template 'entry'
     end
 
     def test_entry_at_given_revision

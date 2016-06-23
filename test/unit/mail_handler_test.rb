@@ -22,7 +22,7 @@ require File.expand_path('../../test_helper', __FILE__)
 class MailHandlerTest < ActiveSupport::TestCase
   fixtures :users, :projects, :enabled_modules, :roles,
            :members, :member_roles, :users,
-           :email_addresses,
+           :email_addresses, :user_preferences,
            :issues, :issue_statuses,
            :workflows, :trackers, :projects_trackers,
            :versions, :enumerations, :issue_categories,
@@ -138,6 +138,17 @@ class MailHandlerTest < ActiveSupport::TestCase
     assert issue.is_a?(Issue)
     assert !issue.new_record?
     assert_equal 'Alpha', issue.reload.fixed_version.name
+  end
+
+  def test_add_issue_with_default_assigned_to
+    # This email contains: 'Project: onlinestore'
+    issue = submit_email(
+              'ticket_on_given_project.eml',
+              :issue => {:assigned_to => 'jsmith'}
+            )
+    assert issue.is_a?(Issue)
+    assert !issue.new_record?
+    assert_equal 'jsmith', issue.reload.assigned_to.login
   end
 
   def test_add_issue_with_status_override
@@ -265,7 +276,7 @@ class MailHandlerTest < ActiveSupport::TestCase
     end
   end
 
-  def test_add_issue_with_cc
+  def test_add_issue_should_add_cc_as_watchers
     issue = submit_email('ticket_with_cc.eml', :issue => {:project => 'ecookbook'})
     assert issue.is_a?(Issue)
     assert !issue.new_record?
@@ -578,6 +589,22 @@ class MailHandlerTest < ActiveSupport::TestCase
     assert_equal 'd8e8fca2dc0f896fd7cb4cb0031ba249', attachment.digest
   end
 
+  def test_mail_with_attachment_latin2
+    issue = submit_email(
+              'ticket_with_text_attachment_iso-8859-2.eml',
+              :issue => {:project => 'ecookbook'}
+            )
+    assert_kind_of Issue, issue
+    assert_equal 1, issue.attachments.size
+    attachment = issue.attachments.first
+    assert_equal 'latin2.txt', attachment.filename
+    assert_equal 19, attachment.filesize
+    assert File.exist?(attachment.diskfile)
+    assert_equal 19, File.size(attachment.diskfile)
+    content = "p\xF8\xEDli\xB9 \xBEluou\xE8k\xFD k\xF9n".force_encoding('CP852')
+    assert_equal content, File.read(attachment.diskfile).force_encoding('CP852')
+  end
+
   def test_multiple_inline_text_parts_should_be_appended_to_issue_description
     issue = submit_email('multiple_text_parts.eml', :issue => {:project => 'ecookbook'})
     assert_include 'first', issue.description
@@ -811,6 +838,28 @@ class MailHandlerTest < ActiveSupport::TestCase
     assert_match /This is reply/, journal.notes
     assert_equal 'Feature request', journal.issue.tracker.name
     assert_equal 'Normal', journal.issue.priority.name
+  end
+
+  def test_update_issue_should_add_cc_as_watchers
+    Watcher.delete_all
+    issue = Issue.find(2)
+
+    assert_difference 'Watcher.count' do
+      assert submit_email('issue_update_with_cc.eml')
+    end
+    issue.reload
+    assert_equal 1, issue.watcher_user_ids.size
+    assert issue.watched_by?(User.find_by_mail('dlopper@somenet.foo'))
+  end
+
+  def test_update_issue_should_not_add_cc_as_watchers_if_already_watching
+    Watcher.delete_all
+    issue = Issue.find(2)
+    Watcher.create!(:watchable => issue, :user => User.find_by_mail('dlopper@somenet.foo'))
+
+    assert_no_difference 'Watcher.count' do
+      assert submit_email('issue_update_with_cc.eml')
+    end
   end
 
   def test_replying_to_a_private_note_should_add_reply_as_private

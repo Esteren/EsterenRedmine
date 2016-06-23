@@ -34,7 +34,7 @@ class Tracker < ActiveRecord::Base
 
   has_and_belongs_to_many :projects
   has_and_belongs_to_many :custom_fields, :class_name => 'IssueCustomField', :join_table => "#{table_name_prefix}custom_fields_trackers#{table_name_suffix}", :association_foreign_key => 'custom_field_id'
-  acts_as_list
+  acts_as_positioned
 
   attr_protected :fields_bits
 
@@ -45,6 +45,29 @@ class Tracker < ActiveRecord::Base
 
   scope :sorted, lambda { order(:position) }
   scope :named, lambda {|arg| where("LOWER(#{table_name}.name) = LOWER(?)", arg.to_s.strip)}
+
+  # Returns the trackers that are visible by the user.
+  #
+  # Examples:
+  #   project.trackers.visible(user)
+  #   => returns the trackers that are visible by the user in project
+  #
+  #   Tracker.visible(user)
+  #   => returns the trackers that are visible by the user in at least on project
+  scope :visible, lambda {|*args|
+    user = args.shift || User.current
+    condition = Project.allowed_to_condition(user, :view_issues) do |role, user|
+      unless role.permissions_all_trackers?(:view_issues)
+        tracker_ids = role.permissions_tracker_ids(:view_issues)
+        if tracker_ids.any?
+          "#{Tracker.table_name}.id IN (#{tracker_ids.join(',')})"
+        else
+          '1=0'
+        end
+      end
+    end
+    joins(:projects).where(condition).uniq
+  }
 
   def to_s; name end
 

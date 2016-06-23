@@ -156,7 +156,7 @@ pt:
   general_first_day_of_week: '1'
 
   notice_account_updated: A conta foi atualizada com sucesso.
-  notice_account_invalid_creditentials: Utilizador ou palavra-chave inválidos.
+  notice_account_invalid_credentials: Utilizador ou palavra-chave inválidos.
   notice_account_password_updated: A palavra-chave foi alterada com sucesso.
   notice_account_wrong_password: Palavra-chave errada.
   notice_account_unknown_email: Utilizador desconhecido.
@@ -184,6 +184,7 @@ pt:
   error_scm_command_failed: "Ocorreu um erro ao tentar aceder ao repositório: %{value}"
   error_scm_annotate: "A entrada não existe ou não pode ser anotada."
   error_issue_not_found_in_project: 'A tarefa não foi encontrada ou não pertence a este projeto.'
+  error_ldap_bind_credentials: "Conta/Palavra-chave do LDAP não é válida"
 
   mail_subject_lost_password: "Palavra-chave de %{value}"
   mail_body_lost_password: 'Para mudar a sua palavra-chave, clique na ligação abaixo:'
@@ -1152,8 +1153,8 @@ pt:
   label_member_management_selected_roles_only: Apenas estas funções
   label_password_required: Confirme a sua palavra-chave para continuar
   label_total_spent_time: Total de tempo registado
-  notice_import_finished: Todos os %{count} registos foram importados.
-  notice_import_finished_with_errors: ! '%{count} de %{total} registos não poderam ser importados.'
+  notice_import_finished: "%{count} registos foram importados"
+  notice_import_finished_with_errors: "%{count} de %{total} registos não poderam ser importados"
   error_invalid_file_encoding: 'O ficheiro não possui a codificação correcta: {encoding}'
   error_invalid_csv_file_or_settings: O ficheiro não é um ficheiro CSV ou não respeita as definições abaixo
   error_can_not_read_import_file: Ocorreu um erro ao ler o ficheiro a importar
@@ -1184,3 +1185,27 @@ pt:
   label_any_open_issues: any open issues
   label_no_open_issues: no open issues
   label_default_values_for_new_users: Default values for new users
+  setting_sys_api_key: Chave da API
+  setting_lost_password: Perdi a palavra-chave
+  mail_subject_security_notification: Security notification
+  mail_body_security_notification_change: ! '%{field} was changed.'
+  mail_body_security_notification_change_to: ! '%{field} was changed to %{value}.'
+  mail_body_security_notification_add: ! '%{field} %{value} was added.'
+  mail_body_security_notification_remove: ! '%{field} %{value} was removed.'
+  mail_body_security_notification_notify_enabled: Email address %{value} now receives
+    notifications.
+  mail_body_security_notification_notify_disabled: Email address %{value} no longer
+    receives notifications.
+  mail_body_settings_updated: ! 'The following settings were changed:'
+  field_remote_ip: IP address
+  label_wiki_page_new: New wiki page
+  label_relations: Relations
+  button_filter: Filter
+  mail_body_password_updated: Your password has been changed.
+  label_no_preview: No preview available
+  error_no_tracker_allowed_for_new_issue_in_project: The project doesn't have any trackers
+    for which you can create an issue
+  label_tracker_all: All trackers
+  label_new_project_issue_tab_enabled: Display the "New issue" tab
+  setting_new_item_menu_tab: Project menu tab for creating new objects
+  label_new_object_tab_enabled: Display the "+" drop-down

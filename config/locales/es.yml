@@ -253,6 +253,7 @@ es:
   error_scm_annotate_big_text_file: "La entrada no puede anotarse, al superar el tamaño máximo para ficheros de texto."
   error_scm_command_failed: "Se produjo un error al acceder al repositorio: %{value}"
   error_scm_not_found: "La entrada y/o la revisión no existe en el repositorio."
+  error_ldap_bind_credentials: Cuenta/Contraseña LDAP incorrecta
   field_account: Cuenta
   field_activity: Actividad
   field_admin: Administrador
@@ -660,7 +661,7 @@ es:
   mail_subject_register: "Activación de la cuenta del %{value}"
   mail_subject_reminder: "%{count} peticion(es) finalizan en los próximos %{days} días"
   notice_account_activated: Su cuenta ha sido activada. Ya puede conectarse.
-  notice_account_invalid_creditentials: Usuario o contraseña inválido.
+  notice_account_invalid_credentials: Usuario o contraseña inválido.
   notice_account_lost_email_sent: Se le ha enviado un correo con instrucciones para elegir una nueva contraseña.
   notice_account_password_updated: Contraseña modificada correctamente.
   notice_account_pending: "Su cuenta ha sido creada y está pendiende de la aprobación por parte del administrador."
@@ -930,7 +931,7 @@ es:
   label_subtask_plural: Subtareas
   label_project_copy_notifications: Enviar notificaciones por correo electrónico durante la copia del proyecto
   error_can_not_delete_custom_field: Fue imposible eliminar el campo personalizado
-  error_unable_to_connect: Fue imposible conectar con (%{value})
+  error_unable_to_connect: Fue imposible conectarse (%{value})
   error_can_not_remove_role: Este rol está en uso y no puede ser eliminado.
   error_can_not_delete_tracker: Este tipo contiene peticiones y no puede ser eliminado.
   field_principal: Principal
@@ -1180,9 +1181,8 @@ es:
   label_member_management_selected_roles_only: Sólo estos roles
   label_password_required: Confirme su contraseña para continuar
   label_total_spent_time: Tiempo total dedicado
-  notice_import_finished: Todos %{count} los elementos han sido importados.
-  notice_import_finished_with_errors: ! '%{count} de %{total} elementos no pudieron ser
-    importados.'
+  notice_import_finished: "%{count} elementos han sido importados"
+  notice_import_finished_with_errors: "%{count} de %{total} elementos no pudieron ser importados"
   error_invalid_file_encoding: El archivo no utiliza %{encoding} válida
   error_invalid_csv_file_or_settings: El archivo no es un archivo CSV o no coincide con la
     configuración
@@ -1214,3 +1214,27 @@ es:
   label_any_open_issues: cualquier peticiones abierta
   label_no_open_issues: peticiones cerradas
   label_default_values_for_new_users: Valor predeterminado para nuevos usuarios
+  setting_sys_api_key: Clave de la API
+  setting_lost_password: ¿Olvidaste la contraseña?
+  mail_subject_security_notification: Security notification
+  mail_body_security_notification_change: ! '%{field} was changed.'
+  mail_body_security_notification_change_to: ! '%{field} was changed to %{value}.'
+  mail_body_security_notification_add: ! '%{field} %{value} was added.'
+  mail_body_security_notification_remove: ! '%{field} %{value} was removed.'
+  mail_body_security_notification_notify_enabled: Email address %{value} now receives
+    notifications.
+  mail_body_security_notification_notify_disabled: Email address %{value} no longer
+    receives notifications.
+  mail_body_settings_updated: ! 'The following settings were changed:'
+  field_remote_ip: IP address
+  label_wiki_page_new: New wiki page
+  label_relations: Relations
+  button_filter: Filter
+  mail_body_password_updated: Your password has been changed.
+  label_no_preview: No preview available
+  error_no_tracker_allowed_for_new_issue_in_project: The project doesn't have any trackers
+    for which you can create an issue
+  label_tracker_all: All trackers
+  label_new_project_issue_tab_enabled: Display the "New issue" tab
+  setting_new_item_menu_tab: Project menu tab for creating new objects
+  label_new_object_tab_enabled: Display the "+" drop-down

@@ -49,8 +49,11 @@ Rails.application.routes.draw do
   match '/issues/changes', :to => 'journals#index', :as => 'issue_changes', :via => :get
   match '/issues/:id/quoted', :to => 'journals#new', :id => /\d+/, :via => :post, :as => 'quoted_issue'
 
-  match '/journals/diff/:id', :to => 'journals#diff', :id => /\d+/, :via => :get
-  match '/journals/edit/:id', :to => 'journals#edit', :id => /\d+/, :via => [:get, :post]
+  resources :journals, :only => [:edit, :update] do
+    member do
+      get 'diff'
+    end
+  end
 
   get '/projects/:project_id/issues/gantt', :to => 'gantts#show', :as => 'project_gantt'
   get '/issues/gantt', :to => 'gantts#show'
@@ -88,7 +91,7 @@ Rails.application.routes.draw do
 
   post 'watchers/watch', :to => 'watchers#watch', :as => 'watch'
   delete 'watchers/watch', :to => 'watchers#unwatch'
-  get 'watchers/new', :to => 'watchers#new'
+  get 'watchers/new', :to => 'watchers#new', :as => 'new_watchers'
   post 'watchers', :to => 'watchers#create'
   post 'watchers/append', :to => 'watchers#append'
   delete 'watchers', :to => 'watchers#destroy'
@@ -153,7 +156,7 @@ Rails.application.routes.draw do
     end
   
     match 'wiki/index', :controller => 'wiki', :action => 'index', :via => :get
-    resources :wiki, :except => [:index, :new, :create], :as => 'wiki_page' do
+    resources :wiki, :except => [:index, :create], :as => 'wiki_page' do
       member do
         get 'rename'
         post 'rename'
@@ -166,6 +169,7 @@ Rails.application.routes.draw do
       collection do
         get 'export'
         get 'date_index'
+        post 'new'
       end
     end
     match 'wiki', :controller => 'wiki', :action => 'show', :via => :get

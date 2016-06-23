@@ -116,7 +116,7 @@ class ApplicationHelperTest < ActionView::TestCase
   def test_inline_images
     to_test = {
       '!http://foo.bar/image.jpg!' => '<img src="http://foo.bar/image.jpg" alt="" />',
-      'floating !>http://foo.bar/image.jpg!' => 'floating <div style="float:right"><img src="http://foo.bar/image.jpg" alt="" /></div>',
+      'floating !>http://foo.bar/image.jpg!' => 'floating <span style="float:right"><img src="http://foo.bar/image.jpg" alt="" /></span>',
       'with class !(some-class)http://foo.bar/image.jpg!' => 'with class <img src="http://foo.bar/image.jpg" class="some-class" alt="" />',
       'with style !{width:100px;height:100px}http://foo.bar/image.jpg!' => 'with style <img src="http://foo.bar/image.jpg" style="width:100px;height:100px;" alt="" />',
       'with title !http://foo.bar/image.jpg(This is a title)!' => 'with title <img src="http://foo.bar/image.jpg" title="This is a title" alt="This is a title" />',
@@ -164,7 +164,7 @@ RAW
 
     attachment = Attachment.generate!(:filename => 'café.jpg')
     with_settings :text_formatting => 'markdown' do
-      assert_include %(<img src="/attachments/download/#{attachment.id}/caf%C3%A9.jpg" alt="">),
+      assert_include %(<img src="/attachments/download/#{attachment.id}/caf%C3%A9.jpg" alt="" />),
         textilizable("![](café.jpg)", :attachments => [attachment])
     end
   end
@@ -1166,10 +1166,10 @@ RAW
                   '<li><a href="#Title">Title</a>' +
                     '<ul>' +
                       '<li><a href="#Subtitle">Subtitle</a></li>' +
-                      '<li><a href="#Subtitle-2">Subtitle</a></li>'
-                    '</ul>'
+                      '<li><a href="#Subtitle-2">Subtitle</a></li>' +
+                    '</ul>' +
                   '</li>' +
-               '</ul>'
+                '</ul>'
 
     @project = Project.find(1)
     result = textilizable(raw).gsub("\n", "")
@@ -1243,14 +1243,14 @@ RAW
 
     # heading that contains inline code
     assert_match Regexp.new('<div class="contextual heading-2" title="Edit this section" id="section-4">' +
-      '<a href="/projects/1/wiki/Test/edit\?section=4"><img src="/images/edit.png(\?\d+)?" alt="Edit" /></a></div>' +
+      '<a class="icon-only icon-edit" href="/projects/1/wiki/Test/edit\?section=4">Edit this section</a></div>' +
       '<a name="Subtitle-with-inline-code"></a>' +
       '<h2 >Subtitle with <code>inline code</code><a href="#Subtitle-with-inline-code" class="wiki-anchor">&para;</a></h2>'),
       result
 
     # last heading
     assert_match Regexp.new('<div class="contextual heading-2" title="Edit this section" id="section-5">' +
-      '<a href="/projects/1/wiki/Test/edit\?section=5"><img src="/images/edit.png(\?\d+)?" alt="Edit" /></a></div>' +
+      '<a class="icon-only icon-edit" href="/projects/1/wiki/Test/edit\?section=5">Edit this section</a></div>' +
       '<a name="Subtitle-after-pre-tag"></a>' +
       '<h2 >Subtitle after pre tag<a href="#Subtitle-after-pre-tag" class="wiki-anchor">&para;</a></h2>'),
       result

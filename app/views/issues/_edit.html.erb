@@ -27,21 +27,22 @@
         <% end %>
     </fieldset>
     <% end %>
-
-    <fieldset><legend><%= l(:field_notes) %></legend>
-    <%= f.text_area :notes, :cols => 60, :rows => 10, :class => 'wiki-edit', :no_label => true %>
-    <%= wikitoolbar_for 'issue_notes' %>
-
-    <% if @issue.safe_attribute? 'private_notes' %>
-    <%= f.check_box :private_notes, :no_label => true %> <label for="issue_private_notes"><%= l(:field_private_notes) %></label>
+    <% if @issue.notes_addable? %>
+      <fieldset><legend><%= l(:field_notes) %></legend>
+      <%= f.text_area :notes, :cols => 60, :rows => 10, :class => 'wiki-edit', :no_label => true %>
+      <%= wikitoolbar_for 'issue_notes' %>
+  
+      <% if @issue.safe_attribute? 'private_notes' %>
+      <%= f.check_box :private_notes, :no_label => true %> <label for="issue_private_notes"><%= l(:field_private_notes) %></label>
+      <% end %>
+  
+      <%= call_hook(:view_issues_edit_notes_bottom, { :issue => @issue, :notes => @notes, :form => f }) %>
+      </fieldset>
+  
+      <fieldset><legend><%= l(:label_attachment_plural) %></legend>
+      <p><%= render :partial => 'attachments/form', :locals => {:container => @issue} %></p>
+      </fieldset>
     <% end %>
-
-    <%= call_hook(:view_issues_edit_notes_bottom, { :issue => @issue, :notes => @notes, :form => f }) %>
-    </fieldset>
-
-    <fieldset><legend><%= l(:label_attachment_plural) %></legend>
-    <p><%= render :partial => 'attachments/form', :locals => {:container => @issue} %></p>
-    </fieldset>
     </div>
 
     <%= f.hidden_field :lock_version %>
@@ -49,6 +50,11 @@
     <%= submit_tag l(:button_submit) %>
     <%= preview_link preview_edit_issue_path(:project_id => @project, :id => @issue), 'issue-form' %>
     | <%= link_to l(:button_cancel), {}, :onclick => "$('#update').hide(); return false;" %>
+
+    <%= hidden_field_tag 'prev_issue_id', @prev_issue_id if @prev_issue_id %>
+    <%= hidden_field_tag 'next_issue_id', @next_issue_id if @next_issue_id %>
+    <%= hidden_field_tag 'issue_position', @issue_position if @issue_position %>
+    <%= hidden_field_tag 'issue_count', @issue_count if @issue_count %>
 <% end %>
 
 <div id="preview" class="wiki"></div>

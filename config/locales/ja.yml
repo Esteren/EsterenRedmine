@@ -167,7 +167,7 @@ ja:
   general_first_day_of_week: '7'
 
   notice_account_updated: アカウントが更新されました。
-  notice_account_invalid_creditentials: ユーザー名もしくはパスワードが無効です
+  notice_account_invalid_credentials: ユーザー名もしくはパスワードが無効です
   notice_account_password_updated: パスワードが更新されました。
   notice_account_wrong_password: パスワードが違います
   notice_account_register_done: アカウントを作成しました。アカウントを有効にするための手順を記載したメールを %{email} 宛に送信しました。
@@ -237,8 +237,8 @@ ja:
   field_description: 説明
   field_summary: サマリー
   field_is_required: 必須
-  field_firstname: 名前
-  field_lastname: 苗字
+  field_firstname: 名
+  field_lastname: 姓
   field_mail: メールアドレス
   field_filename: ファイル
   field_filesize: サイズ
@@ -786,7 +786,7 @@ ja:
   label_planning: 計画
   label_incoming_emails: 受信メール
   label_generate_key: キーの生成
-  label_issue_watchers: チケットのウォッチャー
+  label_issue_watchers: ウォッチャー
   label_example: 例
   label_display: 表示
   label_sort: ソート条件
@@ -1034,7 +1034,7 @@ ja:
   text_issue_conflict_resolution_overwrite: 自分の編集内容の保存を強行 (他のユーザーの更新内容は注記を除き上書きされます)
   notice_issue_update_conflict: このチケットを編集中に他のユーザーが更新しました。
   text_issue_conflict_resolution_cancel: 自分の編集内容を破棄し %{link} を再表示
-  permission_manage_related_issues: 関連するチケットの管理
+  permission_manage_related_issues: リビジョンとチケットの関連の管理
   field_auth_source_ldap_filter: LDAPフィルタ
   label_search_for_watchers: ウォッチャーを検索して追加
   notice_account_deleted: アカウントが削除されました。
@@ -1163,8 +1163,8 @@ ja:
   label_member_management_selected_roles_only: 次のロールのみ
   label_password_required: この操作を続行するにはパスワードを入力してください
   label_total_spent_time: 合計作業時間
-  notice_import_finished: '%{count}件の項目をすべてインポートしました。'
-  notice_import_finished_with_errors: ! '全%{total}件中%{count}件の項目がインポートできませんでした。'
+  notice_import_finished: "%{count}件の項目をすべてインポートしました"
+  notice_import_finished_with_errors: "全%{total}件中%{count}件の項目がインポートできませんでした"
   error_invalid_file_encoding: このファイルのエンコーディングは正しい%{encoding}ではありません
   error_invalid_csv_file_or_settings: このファイルはCSVファイルではないか、以下の設定と一致していません
   error_can_not_read_import_file: インポート元のファイルを読み込み中にエラーが発生しました
@@ -1195,3 +1195,25 @@ ja:
   label_any_open_issues: 未完了のチケット
   label_no_open_issues: なし または完了したチケット
   label_default_values_for_new_users: 新しいユーザーのデフォルト設定
+  error_ldap_bind_credentials: LDAPアカウント/パスワードが無効です
+  setting_sys_api_key: APIキー
+  setting_lost_password: パスワードの再発行
+  mail_subject_security_notification: セキュリティ通知
+  mail_body_security_notification_change: ! '%{field} が変更されました。'
+  mail_body_security_notification_change_to: ! '%{field} が %{value} に変更されました。'
+  mail_body_security_notification_add: ! '%{field} に %{value} が追加されました。'
+  mail_body_security_notification_remove: ! '%{field} から %{value} が削除されました。'
+  mail_body_security_notification_notify_enabled: メールアドレス %{value} に今後の通知が送信されます。
+  mail_body_security_notification_notify_disabled: メールアドレス %{value} には今後は通知が送信されません。
+  mail_body_settings_updated: ! '下記の設定が変更されました:'
+  field_remote_ip: IPアドレス
+  label_wiki_page_new: 新しいWikiページ
+  label_relations: 関係
+  button_filter: フィルタ
+  mail_body_password_updated: パスワードが変更されました。
+  label_no_preview: このファイルはプレビューできません
+  error_no_tracker_allowed_for_new_issue_in_project: このプロジェクトにはチケットの追加が許可されているトラッカーがありません
+  label_tracker_all: すべてのトラッカー
+  label_new_project_issue_tab_enabled: '"新しいチケット" タブを表示'
+  setting_new_item_menu_tab: 新規オブジェクト作成タブ
+  label_new_object_tab_enabled: '"+" ドロップダウンを表示'

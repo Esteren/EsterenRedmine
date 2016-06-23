@@ -28,6 +28,7 @@ module ApplicationHelper
   include Redmine::SudoMode::Helper
   include Redmine::Themes::Helper
   include Redmine::Hook::Helper
+  include Redmine::Helpers::URL
 
   extend Forwardable
   def_delegators :wiki_helper, :wikitoolbar_for, :heads_for_wiki_formatter
@@ -252,7 +253,7 @@ module ApplicationHelper
 
   def due_date_distance_in_words(date)
     if date
-      l((date < Date.today ? :label_roadmap_overdue : :label_roadmap_due_in), distance_of_date_in_words(Date.today, date))
+      l((date < User.current.today ? :label_roadmap_overdue : :label_roadmap_due_in), distance_of_date_in_words(User.current.today, date))
     end
   end
 
@@ -454,18 +455,32 @@ module ApplicationHelper
   end
 
   def reorder_links(name, url, method = :post)
-    link_to(image_tag('2uparrow.png', :alt => l(:label_sort_highest)),
-            url.merge({"#{name}[move_to]" => 'highest'}),
-            :method => method, :title => l(:label_sort_highest)) +
-    link_to(image_tag('1uparrow.png',   :alt => l(:label_sort_higher)),
-            url.merge({"#{name}[move_to]" => 'higher'}),
-           :method => method, :title => l(:label_sort_higher)) +
-    link_to(image_tag('1downarrow.png', :alt => l(:label_sort_lower)),
-            url.merge({"#{name}[move_to]" => 'lower'}),
-            :method => method, :title => l(:label_sort_lower)) +
-    link_to(image_tag('2downarrow.png', :alt => l(:label_sort_lowest)),
-            url.merge({"#{name}[move_to]" => 'lowest'}),
-           :method => method, :title => l(:label_sort_lowest))
+    # TODO: remove associated styles from application.css too
+    ActiveSupport::Deprecation.warn "Application#reorder_links will be removed in Redmine 4."
+
+    link_to(l(:label_sort_highest),
+            url.merge({"#{name}[move_to]" => 'highest'}), :method => method,
+            :title => l(:label_sort_highest), :class => 'icon-only icon-move-top') +
+    link_to(l(:label_sort_higher),
+            url.merge({"#{name}[move_to]" => 'higher'}), :method => method,
+            :title => l(:label_sort_higher), :class => 'icon-only icon-move-up') +
+    link_to(l(:label_sort_lower),
+            url.merge({"#{name}[move_to]" => 'lower'}), :method => method,
+            :title => l(:label_sort_lower), :class => 'icon-only icon-move-down') +
+    link_to(l(:label_sort_lowest),
+            url.merge({"#{name}[move_to]" => 'lowest'}), :method => method,
+            :title => l(:label_sort_lowest), :class => 'icon-only icon-move-bottom')
+  end
+
+  def reorder_handle(object, options={})
+    data = {
+      :reorder_url => options[:url] || url_for(object),
+      :reorder_param => options[:param] || object.class.name.underscore
+    }
+    content_tag('span', '',
+      :class => "sort-handle",
+      :data => data,
+      :title => l(:button_sort))
   end
 
   def breadcrumb(*args)
@@ -494,8 +509,13 @@ module ApplicationHelper
         end
         b += ancestors.collect {|p| link_to_project(p, {:jump => current_menu_item}, :class => 'ancestor') }
       end
-      b << h(@project)
-      b.join(" \xc2\xbb ").html_safe
+      b << content_tag(:span, h(@project), class: 'current-project')
+      if b.size > 1
+        separator = content_tag(:span, ' &raquo; '.html_safe, class: 'separator')
+        path = safe_join(b[0..-2], separator) + separator
+        b = [content_tag(:span, path.html_safe, class: 'breadcrumbs'), b[-1]]
+      end
+      safe_join b
     end
   end
 
@@ -887,7 +907,8 @@ module ApplicationHelper
       @current_section += 1
       if @current_section > 1
         content_tag('div',
-          link_to(image_tag('edit.png'), options[:edit_section_links].merge(:section => @current_section)),
+          link_to(l(:button_edit_section), options[:edit_section_links].merge(:section => @current_section),
+                  :class => 'icon-only icon-edit'),
           :class => "contextual heading-#{level}",
           :title => l(:button_edit_section),
           :id => "section-#{@current_section}") + heading.html_safe
@@ -1037,11 +1058,17 @@ module ApplicationHelper
     fields_for(*args, &proc)
   end
 
+  # Render the error messages for the given objects
   def error_messages_for(*objects)
-    html = ""
     objects = objects.map {|o| o.is_a?(String) ? instance_variable_get("@#{o}") : o}.compact
     errors = objects.map {|o| o.errors.full_messages}.flatten
-    if errors.any?
+    render_error_messages(errors)
+  end
+
+  # Renders a list of error messages
+  def render_error_messages(errors)
+    html = ""
+    if errors.present?
       html << "<div id='errorExplanation'><ul>\n"
       errors.each do |error|
         html << "<li>#{h error}</li>\n"
@@ -1098,9 +1125,10 @@ module ApplicationHelper
   end
 
   def toggle_checkboxes_link(selector)
-    link_to_function image_tag('toggle_check.png'),
+    link_to_function '',
       "toggleCheckboxesBySelector('#{selector}')",
-      :title => "#{l(:button_check_all)} / #{l(:button_uncheck_all)}"
+      :title => "#{l(:button_check_all)} / #{l(:button_uncheck_all)}",
+      :class => 'toggle-checkboxes'
   end
 
   def progress_bar(pcts, options={})
@@ -1108,19 +1136,21 @@ module ApplicationHelper
     pcts = pcts.collect(&:round)
     pcts[1] = pcts[1] - pcts[0]
     pcts << (100 - pcts[1] - pcts[0])
+    titles = options[:titles].to_a
+    titles[0] = "#{pcts[0]}%" if titles[0].blank?
     legend = options[:legend] || ''
     content_tag('table',
       content_tag('tr',
-        (pcts[0] > 0 ? content_tag('td', '', :style => "width: #{pcts[0]}%;", :class => 'closed') : ''.html_safe) +
-        (pcts[1] > 0 ? content_tag('td', '', :style => "width: #{pcts[1]}%;", :class => 'done') : ''.html_safe) +
-        (pcts[2] > 0 ? content_tag('td', '', :style => "width: #{pcts[2]}%;", :class => 'todo') : ''.html_safe)
+        (pcts[0] > 0 ? content_tag('td', '', :style => "width: #{pcts[0]}%;", :class => 'closed', :title => titles[0]) : ''.html_safe) +
+        (pcts[1] > 0 ? content_tag('td', '', :style => "width: #{pcts[1]}%;", :class => 'done', :title => titles[1]) : ''.html_safe) +
+        (pcts[2] > 0 ? content_tag('td', '', :style => "width: #{pcts[2]}%;", :class => 'todo', :title => titles[2]) : ''.html_safe)
       ), :class => "progress progress-#{pcts[0]}").html_safe +
       content_tag('p', legend, :class => 'percent').html_safe
   end
 
   def checked_image(checked=true)
     if checked
-      @checked_image_tag ||= image_tag('toggle_check.png')
+      @checked_image_tag ||= content_tag(:span, nil, :class => 'icon-only icon-checked')
     end
   end
 
@@ -1142,7 +1172,7 @@ module ApplicationHelper
 
   def calendar_for(field_id)
     include_calendar_headers_tags
-    javascript_tag("$(function() { $('##{field_id}').addClass('date').datepicker(datepickerOptions); });")
+    javascript_tag("$(function() { $('##{field_id}').addClass('date').datepickerFallback(datepickerOptions); });")
   end
 
   def include_calendar_headers_tags
@@ -1240,7 +1270,7 @@ module ApplicationHelper
   # +user+ can be a User or a string that will be scanned for an email address (eg. 'joe <joe@foo.bar>')
   def avatar(user, options = { })
     if Setting.gravatar_enabled?
-      options.merge!({:ssl => (request && request.ssl?), :default => Setting.gravatar_default})
+      options.merge!(:default => Setting.gravatar_default)
       email = nil
       if user.respond_to?(:mail)
         email = user.mail

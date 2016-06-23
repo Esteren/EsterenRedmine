@@ -53,6 +53,7 @@ class Attachment < ActiveRecord::Base
   @@thumbnails_storage_path = File.join(Rails.root, "tmp", "thumbnails")
 
   before_create :files_to_final_location
+  after_rollback :delete_from_disk, :on => :create
   after_commit :delete_from_disk, :on => :destroy
 
   # Returns an unsaved copy of the attachment
@@ -236,8 +237,16 @@ class Attachment < ActiveRecord::Base
     Redmine::MimeType.is_type?('text', filename)
   end
 
+  def is_image?
+    Redmine::MimeType.is_type?('image', filename)
+  end
+
   def is_diff?
     self.filename =~ /\.(patch|diff)$/i
+  end
+
+  def is_pdf?
+    Redmine::MimeType.of(filename) == "application/pdf"
   end
 
   # Returns true if the file is readable

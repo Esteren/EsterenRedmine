@@ -90,7 +90,7 @@ module Redmine
         menu_items_for(menu, project) do |node|
           links << render_menu_node(node, project)
         end
-        links.empty? ? nil : content_tag('ul', links.join("\n").html_safe)
+        links.empty? ? nil : content_tag('ul', links.join.html_safe)
       end
 
       def render_menu_node(node, project=nil)
@@ -114,7 +114,7 @@ module Redmine
           # Standard children
           standard_children_list = "".html_safe.tap do |child_html|
             node.children.each do |child|
-              child_html << render_menu_node(child, project)
+              child_html << render_menu_node(child, project) if allowed_node?(child, User.current, project)
             end
           end
 
@@ -138,7 +138,7 @@ module Redmine
           # Tree nodes support #each so we need to do object detection
           if unattached_children.is_a? Array
             unattached_children.each do |child|
-              child_html << content_tag(:li, render_unattached_menu_item(child, project))
+              child_html << content_tag(:li, render_unattached_menu_item(child, project)) if allowed_node?(child, User.current, project)
             end
           else
             raise MenuError, ":child_menus must be an array of MenuItems"
@@ -147,7 +147,15 @@ module Redmine
       end
 
       def render_single_menu_node(item, caption, url, selected)
-        link_to(h(caption), url, item.html_options(:selected => selected))
+        options = item.html_options(:selected => selected)
+
+        # virtual nodes are only there for their children to be displayed in the menu
+        # and should not do anything on click, except if otherwise defined elsewhere
+        if url.blank?
+          url = '#'
+          options.reverse_merge!(:onclick => 'return false;')
+        end
+        link_to(h(caption), url, options)
       end
 
       def render_unattached_menu_item(menu_item, project)
@@ -192,6 +200,7 @@ module Redmine
 
       # See MenuItem#allowed?
       def allowed_node?(node, user, project)
+        raise MenuError, ":child_menus must be an array of MenuItems" unless node.is_a? MenuItem
         node.allowed?(user, project)
       end
     end
@@ -432,7 +441,13 @@ module Redmine
       # * Checking the permission or the url target (project only)
       # * Checking the conditions of the item
       def allowed?(user, project)
-        if user && project
+        if url.blank?
+          # this is a virtual node that is only there for its children to be diplayed in the menu
+          # it is considered an allowed node if at least one of the children is allowed
+          all_children = children
+          all_children += child_menus.call(project) if child_menus
+          return false unless all_children.detect{|child| child.allowed?(user, project) }
+        elsif user && project
           if permission
             unless user.allowed_to?(permission, project)
               return false
