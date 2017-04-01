@@ -325,21 +325,28 @@ class IssuesController < ApplicationController
 
   def destroy
     raise Unauthorized unless @issues.all?(&:deletable?)
-    @hours = TimeEntry.where(:issue_id => @issues.map(&:id)).sum(:hours).to_f
+
+    # all issues and their descendants are about to be deleted
+    issues_and_descendants_ids = Issue.self_and_descendants(@issues).pluck(:id)
+    time_entries = TimeEntry.where(:issue_id => issues_and_descendants_ids)
+    @hours = time_entries.sum(:hours).to_f
+
     if @hours > 0
       case params[:todo]
       when 'destroy'
         # nothing to do
       when 'nullify'
-        TimeEntry.where(['issue_id IN (?)', @issues]).update_all('issue_id = NULL')
+        time_entries.update_all(:issue_id => nil)
       when 'reassign'
-        reassign_to = @project.issues.find_by_id(params[:reassign_to_id])
+        reassign_to = @project && @project.issues.find_by_id(params[:reassign_to_id])
         if reassign_to.nil?
           flash.now[:error] = l(:error_issue_not_found_in_project)
           return
+        elsif issues_and_descendants_ids.include?(reassign_to.id)
+          flash.now[:error] = l(:error_cannot_reassign_time_entries_to_an_issue_about_to_be_deleted)
+          return
         else
-          TimeEntry.where(['issue_id IN (?)', @issues]).
-            update_all("issue_id = #{reassign_to.id}")
+          time_entries.update_all(:issue_id => reassign_to.id, :project_id => reassign_to.project_id)
         end
       else
         # display the destroy form if it's a user request
@@ -489,6 +496,9 @@ class IssuesController < ApplicationController
         render_error l(:error_no_default_issue_status)
         return false
       end
+    elsif request.get?
+      render_error :message => l(:error_no_projects_with_tracker_allowed_for_new_issue), :status => 403
+      return false
     end
 
     @priorities = IssuePriority.active

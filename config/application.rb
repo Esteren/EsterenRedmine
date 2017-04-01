@@ -42,7 +42,7 @@ module RedmineApp
     # Version of your assets, change this if you want to expire all your assets
     config.assets.version = '1.0'
 
-    config.action_mailer.perform_deliveries = true
+    config.action_mailer.perform_deliveries = false
 
     # Do not include all helpers
     config.action_controller.include_all_helpers = false
@@ -55,7 +55,7 @@ module RedmineApp
     config.middleware.insert_after ActionDispatch::ParamsParser, ActionDispatch::XmlParamsParser
 
     # Sets the Content-Length header on responses with fixed-length bodies
-    config.middleware.use Rack::ContentLength
+    config.middleware.insert_after Rack::Sendfile, Rack::ContentLength
 
     # Verify validity of user sessions
     config.redmine_verify_sessions = true

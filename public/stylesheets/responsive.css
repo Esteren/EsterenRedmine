@@ -25,7 +25,7 @@
   add first breakpoint here and start adding responsiveness
 */
 
-@media all and (max-width: 899px)
+@media screen and (max-width: 899px)
 {
   /*----------------------------------------*\
     A) BASIC MOBILE RESETS
@@ -534,7 +534,7 @@
   html.flyout-is-active {
     overflow: hidden;
   }
- 
+
   .flyout-is-active #wrapper, .flyout-is-active #header {
     right: 250px; /* when left flyout is active, move body and header to the right (same amount like flyout-menu's width) */
   }
@@ -719,6 +719,12 @@
     width: 100%;
   }
 
+  /* issues page */
+  body.controller-issues p.query-totals {
+    margin-top: 0px;
+    text-align: left;
+  }
+
   /* subtasks and related issues list on issue show */
   #issue_tree .issues, #relations .issues {
     border-collapse: separate;
@@ -739,6 +745,7 @@
 
   #issue_tree .issue > td.subject, #relations .issue > td.subject {
     width: 100% !important; /* let subject have one full width column */
+    word-break: break-word; /* break word if subject is too long */
   }
 
   #issue_tree .issue > td:not(.checkbox), #relations .issue > td:not(.checkbox) {

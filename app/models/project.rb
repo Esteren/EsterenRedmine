@@ -197,7 +197,9 @@ class Project < ActiveRecord::Base
         if role.allowed_to?(permission)
           s = "#{Project.table_name}.is_public = #{connection.quoted_true}"
           if user.id
-            s = "(#{s} AND #{Project.table_name}.id NOT IN (SELECT project_id FROM #{Member.table_name} WHERE user_id = #{user.id}))"
+            group = role.anonymous? ? Group.anonymous : Group.non_member
+            principal_ids = [user.id, group.id].compact
+            s = "(#{s} AND #{Project.table_name}.id NOT IN (SELECT project_id FROM #{Member.table_name} WHERE user_id IN (#{principal_ids.join(',')})))"
           end
           statement_by_role[role] = s
         end
@@ -348,6 +350,10 @@ class Project < ActiveRecord::Base
     self.status == STATUS_ACTIVE
   end
 
+  def closed?
+    self.status == STATUS_CLOSED
+  end
+
   def archived?
     self.status == STATUS_ARCHIVED
   end
@@ -375,8 +381,12 @@ class Project < ActiveRecord::Base
   # Unarchives the project
   # All its ancestors must be active
   def unarchive
-    return false if ancestors.detect {|a| !a.active?}
-    update_attribute :status, STATUS_ACTIVE
+    return false if ancestors.detect {|a| a.archived?}
+    new_status = STATUS_ACTIVE
+    if parent
+      new_status = parent.status
+    end
+    update_attribute :status, new_status
   end
 
   def close
@@ -512,16 +522,27 @@ class Project < ActiveRecord::Base
   end
 
   # Return a Principal scope of users/groups issues can be assigned to
-  def assignable_users
+  def assignable_users(tracker=nil)
+    return @assignable_users[tracker] if @assignable_users && @assignable_users[tracker]
+
     types = ['User']
     types << 'Group' if Setting.issue_group_assignment?
 
-    @assignable_users ||= Principal.
+    scope = Principal.
       active.
       joins(:members => :roles).
       where(:type => types, :members => {:project_id => id}, :roles => {:assignable => true}).
       uniq.
       sorted
+
+    if tracker
+      # Rejects users that cannot the view the tracker
+      roles = Role.where(:assignable => true).select {|role| role.permissions_tracker?(:view_issues, tracker)}
+      scope = scope.where(:roles => {:id => roles.map(&:id)})
+    end
+
+    @assignable_users ||= {}
+    @assignable_users[tracker] = scope
   end
 
   # Returns the mail addresses of users that should be always notified on project events

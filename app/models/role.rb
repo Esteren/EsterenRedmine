@@ -222,6 +222,13 @@ class Role < ActiveRecord::Base
     permissions_all_trackers[permission.to_s].to_s != '0'
   end
 
+  # Returns true if permission is given for the tracker
+  # (explicitly or for all trackers)
+  def permissions_tracker?(permission, tracker)
+    permissions_all_trackers?(permission) ||
+      permissions_tracker_ids?(permission, tracker.try(:id))
+  end
+
   # Sets the trackers that are allowed for a permission.
   # tracker_ids can be an array of tracker ids or :all for
   # no restrictions.
@@ -272,9 +279,9 @@ private
   end
 
   def self.find_or_create_system_role(builtin, name)
-    role = where(:builtin => builtin).first
+    role = unscoped.where(:builtin => builtin).first
     if role.nil?
-      role = create(:name => name) do |r|
+      role = unscoped.create(:name => name) do |r|
         r.builtin = builtin
       end
       raise "Unable to create the #{name} role (#{role.errors.full_messages.join(',')})." if role.new_record?
