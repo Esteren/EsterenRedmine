@@ -89,7 +89,7 @@ cache_formatted_text:
 wiki_compression:
   default: ""
 default_language:
-  default: en
+  default: fr
 force_default_language_for_anonymous:
   default: 0
 force_default_language_for_loggedin:
@@ -147,7 +147,7 @@ commit_logtime_activity_id:
 # 0 means autologin is disabled
 autologin:
   format: int
-  default: 0
+  default: 1 
 # date format
 date_format:
   default: ''

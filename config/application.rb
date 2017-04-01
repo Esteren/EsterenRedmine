@@ -42,7 +42,7 @@ module RedmineApp
     # Version of your assets, change this if you want to expire all your assets
     config.assets.version = '1.0'
 
-    config.action_mailer.perform_deliveries = false
+    config.action_mailer.perform_deliveries = true
 
     # Do not include all helpers
     config.action_controller.include_all_helpers = false
