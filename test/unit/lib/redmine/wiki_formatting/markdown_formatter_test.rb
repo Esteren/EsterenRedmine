@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2016  Jean-Philippe Lang
+# Copyright (C) 2006-2017  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -68,6 +68,15 @@ STR
     assert_select_in @formatter.new(text).to_html, 'pre code.ruby.syntaxhl' do
       assert_select 'span.keyword', :text => 'def'
     end
+  end
+
+  def test_should_not_allow_invalid_language_for_code_blocks
+    text = <<-STR
+~~~foo
+test
+~~~
+STR
+    assert_equal "<pre>test\n</pre>", @formatter.new(text).to_html
   end
 
   def test_external_links_should_have_external_css_class

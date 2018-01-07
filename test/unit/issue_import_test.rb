@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2016  Jean-Philippe Lang
+# Copyright (C) 2006-2017  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -113,6 +113,19 @@ class IssueImportTest < ActiveSupport::TestCase
     assert_nil issues[0].parent
     assert_equal issues[0].id, issues[1].parent_id
     assert_equal 2, issues[2].parent_id
+  end
+
+  def test_backward_and_forward_reference_to_parent_should_work
+    import = generate_import('import_subtasks.csv')
+    import.settings = {
+      'separator' => ";", 'wrapper' => '"', 'encoding' => "UTF-8",
+      'mapping' => {'project_id' => '1', 'tracker' => '1', 'subject' => '2', 'parent_issue_id' => '3'}
+    }
+    import.save!
+
+    root, child1, grandchild, child2 = new_records(Issue, 4) { import.run }
+    assert_equal root, child1.parent
+    assert_equal child2, grandchild.parent
   end
 
   def test_assignee_should_be_set

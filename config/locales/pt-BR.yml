@@ -150,6 +150,8 @@ pt-BR:
         circular_dependency: "Esta relação geraria uma dependência circular"
         cant_link_an_issue_with_a_descendant: "Uma tarefa não pode ser relaciona a uma de suas subtarefas"
         earlier_than_minimum_start_date: "cannot be earlier than %{date} because of preceding issues"
+        not_a_regexp: "is not a valid regular expression"
+        open_issue_with_closed_parent: "An open issue cannot be attached to a closed parent task"
 
   actionview_instancetag_blank_option: Selecione
 
@@ -480,7 +482,6 @@ pt-BR:
   label_internal: Interno
   label_last_changes: "últimas %{count} alterações"
   label_change_view_all: Mostrar todas as alterações
-  label_personalize_page: Personalizar esta página
   label_comment: Comentário
   label_comment_plural: Comentários
   label_x_comments:
@@ -624,7 +625,6 @@ pt-BR:
   label_age: Idade
   label_change_properties: Alterar propriedades
   label_general: Geral
-  label_more: Mais
   label_scm: 'Controle de versão:'
   label_plugins: Plugins
   label_ldap_authentication: Autenticação LDAP
@@ -634,7 +634,6 @@ pt-BR:
   label_preferences: Preferências
   label_chronological_order: Em ordem cronológica
   label_reverse_chronological_order: Em ordem cronológica inversa
-  label_planning: Planejamento
   label_incoming_emails: E-mails recebidos
   label_generate_key: Gerar uma chave
   label_issue_watchers: Observadores
@@ -918,7 +917,6 @@ pt-BR:
   error_can_not_remove_role: Este papel está em uso e não pode ser excluído.
   error_can_not_delete_tracker: Este tipo de tarefa está atribuído a alguma(s) tarefa(s) e não pode ser excluído.
   field_principal: Principal
-  label_my_page_block: Meu bloco de página
   notice_failed_to_save_members: "Falha ao salvar membro(s): %{errors}."
   text_zoom_out: Afastar zoom
   text_zoom_in: Aproximar zoom
@@ -929,10 +927,8 @@ pt-BR:
   project_module_calendar: Calendário
   button_edit_associated_wikipage: "Editar página wiki relacionada: %{page_title}"
   field_text: Campo de texto
-  label_user_mail_option_only_owner: Somente para as coisas que eu criei
   setting_default_notification_option: Opção padrão de notificação
   label_user_mail_option_only_my_events: Somente para as coisas que eu esteja observando ou esteja envolvido
-  label_user_mail_option_only_assigned: Somente para as coisas que estejam atribuídas a mim
   label_user_mail_option_none: Sem eventos
   field_member_of_group: Responsável pelo grupo
   field_assigned_to_role: Papel do responsável
@@ -991,16 +987,12 @@ pt-BR:
   description_project_scope: Escopo da pesquisa
   description_filter: Filtro
   description_user_mail_notification: Configuração de notificações por e-mail
-  description_date_from: Digite a data inicial
   description_message_content: Conteúdo da mensagem
   description_available_columns: Colunas disponíveis
-  description_date_range_interval: Escolha um período selecionando a data de início e fim
   description_issue_category_reassign: Escolha uma categoria de tarefas
   description_search: Campo de busca
   description_notes: Notas
-  description_date_range_list: Escolha um período a partir da lista
   description_choose_project: Projetos
-  description_date_to: Digite a data final
   description_query_sort_criteria_attribute: Atributo de ordenação
   description_wiki_subpages_reassign: Escolha uma nova página pai
   description_selected_columns: Colunas selecionadas
@@ -1226,5 +1218,31 @@ pt-BR:
   label_new_object_tab_enabled: Exibir o "+" suspenso
   error_no_projects_with_tracker_allowed_for_new_issue: There are no projects with trackers
     for which you can create an issue
+  field_textarea_font: Font used for text areas
+  label_font_default: Default font
+  label_font_monospace: Monospaced font
+  label_font_proportional: Proportional font
+  setting_timespan_format: Time span format
+  label_table_of_contents: Table of contents
+  setting_commit_logs_formatting: Apply text formatting to commit messages
+  setting_mail_handler_enable_regex_delimiters: Enable regular expressions
+  error_move_of_child_not_possible: 'Subtask %{child} could not be moved to the new
+    project: %{errors}'
   error_cannot_reassign_time_entries_to_an_issue_about_to_be_deleted: Spent time cannot
     be reassigned to an issue that is about to be deleted
+  setting_timelog_required_fields: Required fields for time logs
+  label_attribute_of_object: '%{object_name}''s %{name}'
+  label_user_mail_option_only_assigned: Only for things I watch or I am assigned to
+  label_user_mail_option_only_owner: Only for things I watch or I am the owner of
+  warning_fields_cleared_on_bulk_edit: Changes will result in the automatic deletion
+    of values from one or more fields on the selected objects
+  field_updated_by: Updated by
+  field_last_updated_by: Last updated by
+  field_full_width_layout: Full width layout
+  label_last_notes: Last notes
+  field_digest: Checksum
+  field_default_assigned_to: Default assignee
+  setting_show_custom_fields_on_registration: Show custom fields on registration
+  permission_view_news: View news
+  label_no_preview_alternative_html: No preview available. %{link} the file instead.
+  label_no_preview_download: Download

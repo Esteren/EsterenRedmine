@@ -1,5 +1,5 @@
 <div class="contextual">
-<%= link_to(l(:button_edit), edit_user_path(@user), :class => 'icon icon-edit') if User.current.admin? %>
+<%= link_to(l(:button_edit), edit_user_path(@user), :class => 'icon icon-edit') if User.current.admin? && @user.logged? %>
 </div>
 
 <h2><%= avatar @user, :size => "50" %> <%= @user.name %></h2>
@@ -26,7 +26,7 @@
 <h3><%=l(:label_issue_plural)%></h3>
 <ul>
   <li><%= link_to l(:label_assigned_issues),
-        issues_path(:set_filter => 1, :assigned_to_id => @user.id, :sort => 'priority:desc,updated_on:desc') %>:
+        issues_path(:set_filter => 1, :assigned_to_id => ([@user.id] + @user.group_ids).join("|"), :sort => 'priority:desc,updated_on:desc') %>:
       <%= Issue.visible.open.assigned_to(@user).count %>
   <li><%= link_to l(:label_reported_issues),
         issues_path(:set_filter => 1, :status_id => '*', :author_id => @user.id) %>:

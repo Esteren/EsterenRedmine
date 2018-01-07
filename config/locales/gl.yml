@@ -159,6 +159,8 @@ gl:
         circular_dependency: "Esta relación podería crear unha dependencia circular"
         cant_link_an_issue_with_a_descendant: "As peticións non poden estar ligadas coas súas subtarefas"
         earlier_than_minimum_start_date: "Non pode ser antes de %{date} por mor de peticións anteriores"
+        not_a_regexp: "is not a valid regular expression"
+        open_issue_with_closed_parent: "An open issue cannot be attached to a closed parent task"
 
   actionview_instancetag_blank_option: Por favor seleccione
 
@@ -492,7 +494,6 @@ gl:
   label_module_plural: Módulos
   label_month: Mes
   label_months_from: meses de
-  label_more: Máis
   label_more_than_ago: "hai máis de"
   label_my_account: "Conta"
   label_my_page: "Páxina persoal"
@@ -521,8 +522,6 @@ gl:
   label_password_lost: "Esqueceu o contrasinal?"
   label_permissions: Permisos
   label_permissions_report: Informe de permisos
-  label_personalize_page: Personalizar esta páxina
-  label_planning: Planificación
   label_please_login: "Acceder"
   label_plugins: Complementos
   label_precedes: anterior a
@@ -910,7 +909,6 @@ gl:
   error_can_not_remove_role: "Este rol non pode eliminarse porque está a usarse."
   error_can_not_delete_tracker: "Este tipo de petición non pode eliminarse porque existen peticións deste tipo."
   field_principal: "Principal"
-  label_my_page_block: "Trebellos:"
   notice_failed_to_save_members: "Non foi posíbel gardar os membros: %{errors}."
   text_zoom_out: "Afastar"
   text_zoom_in: "Achegar"
@@ -921,10 +919,8 @@ gl:
   project_module_calendar: "Calendario"
   button_edit_associated_wikipage: "Editar a páxina do wiki asociada: %{page_title}"
   field_text: "Campo de texto"
-  label_user_mail_option_only_owner: "Só para as cousas das que son o propietario"
   setting_default_notification_option: "Opción de notificación predeterminada"
   label_user_mail_option_only_my_events: "Só para as cousas que sigo ou nas que estou involucrado"
-  label_user_mail_option_only_assigned: "Só para cousas que teño asignadas"
   label_user_mail_option_none: "Non hai eventos."
   field_member_of_group: "Grupo do asignado"
   field_assigned_to_role: "Rol do asignado"
@@ -981,16 +977,12 @@ gl:
   description_project_scope: "Ámbito da busca"
   description_filter: "Filtro"
   description_user_mail_notification: "Configuración das notificacións por correo electrónico"
-  description_date_from: "Introduza a data de inicio"
   description_message_content: "Contido da mensaxe"
   description_available_columns: "Columnas dispoñíbeis"
-  description_date_range_interval: "Escolla un intervalo seleccionando unha data de inicio e outra de fin."
   description_issue_category_reassign: "Escolla a categoría da petición."
   description_search: "Campo de busca"
   description_notes: "Notas"
-  description_date_range_list: "Escolla un intervalo da lista."
   description_choose_project: "Proxectos"
-  description_date_to: "Introduza a data de fin"
   description_query_sort_criteria_attribute: "Ordenar polo atributo"
   description_wiki_subpages_reassign: "Escoller unha nova páxina superior"
   description_selected_columns: "Columnas seleccionadas"
@@ -1216,5 +1208,31 @@ gl:
   label_new_object_tab_enabled: Display the "+" drop-down
   error_no_projects_with_tracker_allowed_for_new_issue: There are no projects with trackers
     for which you can create an issue
+  field_textarea_font: Font used for text areas
+  label_font_default: Default font
+  label_font_monospace: Monospaced font
+  label_font_proportional: Proportional font
+  setting_timespan_format: Time span format
+  label_table_of_contents: Table of contents
+  setting_commit_logs_formatting: Apply text formatting to commit messages
+  setting_mail_handler_enable_regex_delimiters: Enable regular expressions
+  error_move_of_child_not_possible: 'Subtask %{child} could not be moved to the new
+    project: %{errors}'
   error_cannot_reassign_time_entries_to_an_issue_about_to_be_deleted: Spent time cannot
     be reassigned to an issue that is about to be deleted
+  setting_timelog_required_fields: Required fields for time logs
+  label_attribute_of_object: '%{object_name}''s %{name}'
+  label_user_mail_option_only_assigned: Only for things I watch or I am assigned to
+  label_user_mail_option_only_owner: Only for things I watch or I am the owner of
+  warning_fields_cleared_on_bulk_edit: Changes will result in the automatic deletion
+    of values from one or more fields on the selected objects
+  field_updated_by: Updated by
+  field_last_updated_by: Last updated by
+  field_full_width_layout: Full width layout
+  label_last_notes: Last notes
+  field_digest: Checksum
+  field_default_assigned_to: Default assignee
+  setting_show_custom_fields_on_registration: Show custom fields on registration
+  permission_view_news: View news
+  label_no_preview_alternative_html: No preview available. %{link} the file instead.
+  label_no_preview_download: Download

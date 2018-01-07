@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2016  Jean-Philippe Lang
+# Copyright (C) 2006-2017  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -54,7 +54,7 @@ module Redmine
           end
 
           def scm_version_from_command_line
-            shellout("#{sq_bin} --version --no-color") { |io| io.read }.to_s
+            shellout("#{sq_bin} --version") { |io| io.read }.to_s
           end
         end
 
@@ -166,6 +166,7 @@ module Redmine
         def lastrev(path, rev)
           return nil if path.nil?
           cmd_args = %w|log --no-color --encoding=UTF-8 --date=iso --pretty=fuller --no-merges -n 1|
+          cmd_args << '--no-renames' if self.class.client_version_above?([2, 9])
           cmd_args << rev if rev
           cmd_args << "--" << path unless path.empty?
           lines = []
@@ -194,6 +195,7 @@ module Redmine
         def revisions(path, identifier_from, identifier_to, options={})
           revs = Revisions.new
           cmd_args = %w|log --no-color --encoding=UTF-8 --raw --date=iso --pretty=fuller --parents --stdin|
+          cmd_args << '--no-renames' if self.class.client_version_above?([2, 9])
           cmd_args << "--reverse" if options[:reverse]
           cmd_args << "-n" << "#{options[:limit].to_i}" if options[:limit]
           cmd_args << "--" << scm_iconv(@path_encoding, 'UTF-8', path) if path && !path.empty?
@@ -315,6 +317,7 @@ module Redmine
           else
             cmd_args << "show" << "--no-color" << identifier_from
           end
+          cmd_args << '--no-renames' if self.class.client_version_above?([2, 9])
           cmd_args << "--" <<  scm_iconv(@path_encoding, 'UTF-8', path) unless path.empty?
           diff = []
           git_cmd(cmd_args) do |io|
@@ -335,7 +338,7 @@ module Redmine
           content = nil
           git_cmd(cmd_args) { |io| io.binmode; content = io.read }
           # git annotates binary files
-          return nil if content.is_binary_data?
+          return nil if ScmData.binary?(content)
           identifier = ''
           # git shows commit author on the first occurrence only
           authors_by_commit = {}

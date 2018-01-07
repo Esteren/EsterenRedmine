@@ -1,5 +1,5 @@
 # Redmine - project management software
-# Copyright (C) 2006-2016  Jean-Philippe Lang
+# Copyright (C) 2006-2017  Jean-Philippe Lang
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,11 +18,13 @@
 require 'csv'
 
 class ImportsController < ApplicationController
+  menu_item :issues
 
-  before_filter :find_import, :only => [:show, :settings, :mapping, :run]
-  before_filter :authorize_global
+  before_action :find_import, :only => [:show, :settings, :mapping, :run]
+  before_action :authorize_global
 
   helper :issues
+  helper :queries
 
   def new
   end
@@ -50,7 +52,7 @@ class ImportsController < ApplicationController
 
   rescue CSV::MalformedCSVError => e
     flash.now[:error] = l(:error_invalid_csv_file_or_settings)
-  rescue ArgumentError, Encoding::InvalidByteSequenceError => e
+  rescue ArgumentError, EncodingError => e
     flash.now[:error] = l(:error_invalid_file_encoding, :encoding => ERB::Util.h(@import.settings['encoding']))
   rescue SystemCallError => e
     flash.now[:error] = l(:error_can_not_read_import_file)

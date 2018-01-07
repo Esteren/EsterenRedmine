@@ -134,6 +134,8 @@ lt:
         circular_dependency: "Šis ryšys sukurtų ciklinę priklausomybę"
         cant_link_an_issue_with_a_descendant: "Darbas negali būti susietas su viena iš savo darbo dalių"
         earlier_than_minimum_start_date: "negali būti anksčiau už %{date} dėl ankstesnių darbų"
+        not_a_regexp: "is not a valid regular expression"
+        open_issue_with_closed_parent: "An open issue cannot be attached to a closed parent task"
 
   actionview_instancetag_blank_option: Prašom parinkti
 
@@ -586,7 +588,6 @@ lt:
   label_my_page: Mano puslapis
   label_my_account: Mano paskyra
   label_my_projects: Mano projektai
-  label_my_page_block: Mano puslapio blokas
   label_administration: Administravimas
   label_login: Prisijungti
   label_logout: Atsijungti
@@ -683,7 +684,6 @@ lt:
   label_internal: Vidinis
   label_last_changes: "paskutiniai %{count} pokyčiai(-ių)"
   label_change_view_all: Peržiūrėti visus pakeitimus
-  label_personalize_page: Suasmeninti šį puslapį
   label_comment: Komentaras
   label_comment_plural: Komentarai
   label_x_comments:
@@ -852,8 +852,6 @@ lt:
   label_user_mail_option_selected: "Bet kokiam įvykiui tiktai pasirinktuose projektuose ..."
   label_user_mail_option_none: "Jokių įvykių"
   label_user_mail_option_only_my_events: "Tiktai dalykai, kuriuos stebiu arba esu įtrauktas"
-  label_user_mail_option_only_assigned: "Tiktai dalykai, kuriems esu priskirtas"
-  label_user_mail_option_only_owner: "Tiktai dalykai, kurių šeimininkas esu aš"
   label_user_mail_no_self_notified: "Nenoriu būti informuotas apie pakeitimus, kuriuos pats atlieku"
   label_registration_activation_by_email: paskyros aktyvacija per e-paštą
   label_registration_manual_activation: rankinė paskyros aktyvacija
@@ -862,7 +860,6 @@ lt:
   label_age: Amžius
   label_change_properties: Pakeisti nustatymus
   label_general: Bendri(-as)
-  label_more: Daugiau
   label_scm: SCM
   label_plugins: Įskiepiai
   label_ldap_authentication: LDAP autentifikacija
@@ -872,7 +869,6 @@ lt:
   label_preferences: Savybės
   label_chronological_order: Chronologine tvarka
   label_reverse_chronological_order: Atbuline chronologine tvarka
-  label_planning: Planavimas
   label_incoming_emails: Įeinantys laiškai
   label_generate_key: Generuoti raktą
   label_issue_watchers: Stebėtojai
@@ -1179,10 +1175,6 @@ lt:
   description_all_columns: AVisi stulpeliai
   description_issue_category_reassign: Pasirinkti darbo kategoriją
   description_wiki_subpages_reassign: Pasirinkti naują pagrindinį puslapį
-  description_date_range_list: Pasirinkitę diapazoną iš sąrašo
-  description_date_range_interval: Pasirinkite diapazoną pasirinkdami pradžios ir pabaigos datas
-  description_date_from: Įvesti pradžios datą
-  description_date_to: Įvesti pabaigos datą
   text_repository_identifier_info: 'Leidžiamos tik mažosios raidės (a-z), skaitmenys, brūkšneliai ir pabraukimo simboliai.<br />Kartą išsaugojus pakeitimai negalimi'
   label_wiki_page_new: New wiki page
   label_relations: Relations
@@ -1197,5 +1189,31 @@ lt:
   label_new_object_tab_enabled: Display the "+" drop-down
   error_no_projects_with_tracker_allowed_for_new_issue: There are no projects with trackers
     for which you can create an issue
+  field_textarea_font: Font used for text areas
+  label_font_default: Default font
+  label_font_monospace: Monospaced font
+  label_font_proportional: Proportional font
+  setting_timespan_format: Time span format
+  label_table_of_contents: Table of contents
+  setting_commit_logs_formatting: Apply text formatting to commit messages
+  setting_mail_handler_enable_regex_delimiters: Enable regular expressions
+  error_move_of_child_not_possible: 'Subtask %{child} could not be moved to the new
+    project: %{errors}'
   error_cannot_reassign_time_entries_to_an_issue_about_to_be_deleted: Spent time cannot
     be reassigned to an issue that is about to be deleted
+  setting_timelog_required_fields: Required fields for time logs
+  label_attribute_of_object: '%{object_name}''s %{name}'
+  label_user_mail_option_only_assigned: Only for things I watch or I am assigned to
+  label_user_mail_option_only_owner: Only for things I watch or I am the owner of
+  warning_fields_cleared_on_bulk_edit: Changes will result in the automatic deletion
+    of values from one or more fields on the selected objects
+  field_updated_by: Updated by
+  field_last_updated_by: Last updated by
+  field_full_width_layout: Full width layout
+  label_last_notes: Last notes
+  field_digest: Checksum
+  field_default_assigned_to: Default assignee
+  setting_show_custom_fields_on_registration: Show custom fields on registration
+  permission_view_news: View news
+  label_no_preview_alternative_html: No preview available. %{link} the file instead.
+  label_no_preview_download: Download
