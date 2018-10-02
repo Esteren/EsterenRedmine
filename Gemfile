@@ -4,9 +4,11 @@ if Gem::Version.new(Bundler::VERSION) < Gem::Version.new('1.5.0')
   abort "Redmine requires Bundler 1.5.0 or higher (you're using #{Bundler::VERSION}).\nPlease update with 'gem update bundler'."
 end
 
-gem "passenger", "~> 5.2"
 gem "rails", "4.2.8"
 gem "addressable", "2.4.0" if RUBY_VERSION < "2.0"
+if RUBY_VERSION < "2.1"
+  gem "public_suffix", (RUBY_VERSION < "2.0" ? "~> 1.4" : "~> 2.0.5")
+end
 gem "jquery-rails", "~> 3.1.4"
 gem "coderay", "~> 1.1.1"
 gem "request_store", "1.0.5"
@@ -16,8 +18,9 @@ gem "actionpack-xml_parser"
 gem "roadie-rails", "~> 1.1.1"
 gem "roadie", "~> 3.2.1"
 gem "mimemagic"
+gem "mail", "~> 2.6.4"
 
-gem "nokogiri", (RUBY_VERSION >= "2.1" ? "~> 1.7.2" : "~> 1.6.8")
+gem "nokogiri", (RUBY_VERSION >= "2.1" ? "~> 1.8.1" : "~> 1.6.8")
 gem "i18n", "~> 0.7.0"
 gem "ffi", "1.9.14", :platforms => :mingw if RUBY_VERSION < "2.0"
 
@@ -30,7 +33,7 @@ gem "rbpdf", "~> 1.19.3"
 
 # Optional gem for LDAP authentication
 group :ldap do
-  gem "net-ldap", "~> 0.16.0"
+  gem "net-ldap", "~> 0.12.0"
 end
 
 # Optional gem for OpenID authentication

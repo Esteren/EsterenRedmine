@@ -3,13 +3,3 @@
 Redmine is a flexible project management web application written using Ruby on Rails framework.
 
 More details can be found in the doc directory or on the official website http://www.redmine.org
-
-Plugins:
-* https://github.com/Esteren/RedminePlugin
-* https://github.com/RCRM/redmine_checklists.git
-* https://github.com/martin-denizet/redmine_custom_css.git
-* https://github.com/danmunn/redmine_dmsf.git
-* https://github.com/edavis10/redmine-exception-handler-plugin.git
-* https://github.com/TravisSpangle/redmine_spent_time_in_issue_description.git
-* https://bitbucket.org/redminecrm/redmine_zenedit.git
-
