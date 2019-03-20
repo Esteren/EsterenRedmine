@@ -1,9 +1,11 @@
 syntax: glob
 
 .project
+.idea
 .loadpath
 .powrc
 .rvmrc
+.ruby-version
 config/additional_environment.rb
 config/configuration.yml
 config/database.yml

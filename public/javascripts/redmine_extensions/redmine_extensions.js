@@ -1,4 +1,4 @@
-REDMINE_EXTENSIONS = {
+window.REDMINE_EXTENSIONS = {
 
   toggleDiv: function (el_or_id) {
     var el;

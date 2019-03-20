@@ -876,6 +876,38 @@ class QueryTest < ActiveSupport::TestCase
     User.current = nil
   end
 
+  def test_filter_on_watched_issues_with_view_issue_watchers_permission
+    User.current = User.find(1)
+    User.current.admin = true
+    assert User.current.allowed_to?(:view_issue_watchers, Project.find(1))
+
+    Issue.find(1).add_watcher User.current
+    Issue.find(3).add_watcher User.find(3)
+    query = IssueQuery.new(:name => '_', :filters => { 'watcher_id' => {:operator => '=', :values => ['me', '3']}})
+    result = find_issues_with_query(query)
+    assert_includes result, Issue.find(1)
+    assert_includes result, Issue.find(3)
+  ensure
+    User.current.reload
+    User.current = nil
+  end
+
+  def test_filter_on_watched_issues_without_view_issue_watchers_permission
+    User.current = User.find(1)
+    User.current.admin = false
+    assert !User.current.allowed_to?(:view_issue_watchers, Project.find(1))
+
+    Issue.find(1).add_watcher User.current
+    Issue.find(3).add_watcher User.find(3)
+    query = IssueQuery.new(:name => '_', :filters => { 'watcher_id' => {:operator => '=', :values => ['me', '3']}})
+    result = find_issues_with_query(query)
+    assert_includes result, Issue.find(1)
+    assert_not_includes result, Issue.find(3)
+  ensure
+    User.current.reload
+    User.current = nil
+  end
+
   def test_filter_on_custom_field_should_ignore_projects_with_field_disabled
     field = IssueCustomField.generate!(:trackers => Tracker.all, :project_ids => [1, 3, 4], :is_for_all => false, :is_filter => true)
     Issue.generate!(:project_id => 3, :tracker_id => 2, :custom_field_values => {field.id.to_s => 'Foo'})
@@ -1456,6 +1488,12 @@ class QueryTest < ActiveSupport::TestCase
   def test_default_sort
     q = IssueQuery.new
     assert_equal [['id', 'desc']], q.sort_criteria
+  end
+
+  def test_sort_criteria_should_remove_blank_keys
+    q = IssueQuery.new
+    q.sort_criteria = [['priority', 'desc'], [nil, 'desc'], ['', 'asc'], ['project', 'asc']]
+    assert_equal [['priority', 'desc'], ['project', 'asc']], q.sort_criteria
   end
 
   def test_set_sort_criteria_with_hash
