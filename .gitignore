@@ -1,3 +1,5 @@
+*.pid
+*.pid.lock
 .svn
 /repos/
 /.project
@@ -44,3 +46,6 @@
 /Gemfile.lock
 /Gemfile.local
 
+
+# Ignore master key for decrypting credentials and more.
+/config/master.key

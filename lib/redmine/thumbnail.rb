@@ -38,7 +38,7 @@ module Redmine
           FileUtils.mkdir_p directory
         end
         size_option = "#{size}x#{size}>"
-        cmd = "#{shell_quote CONVERT_BIN} #{shell_quote source} -thumbnail #{shell_quote size_option} #{shell_quote target}"
+        cmd = "#{shell_quote CONVERT_BIN} #{shell_quote source} -auto-orient -thumbnail #{shell_quote size_option} #{shell_quote target}"
         unless system(cmd)
           logger.error("Creating thumbnail failed (#{$?}):\nCommand: #{cmd}")
           return nil
@@ -49,7 +49,12 @@ module Redmine
 
     def self.convert_available?
       return @convert_available if defined?(@convert_available)
-      @convert_available = system("#{shell_quote CONVERT_BIN} -version") rescue false
+      begin
+        `#{shell_quote CONVERT_BIN} -version`
+        @convert_available = $?.success?
+      rescue
+        @convert_available = false
+      end
       logger.warn("Imagemagick's convert binary (#{CONVERT_BIN}) not available") unless @convert_available
       @convert_available
     end

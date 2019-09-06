@@ -54,7 +54,7 @@ class MailHandler < ActionMailer::Base
   def self.safe_receive(*args)
     receive(*args)
   rescue Exception => e
-    logger.error "MailHandler: an unexpected error occurred when receiving email: #{e.message}" if logger
+    Rails.logger.error "MailHandler: an unexpected error occurred when receiving email: #{e.message}"
     return false
   end
 
@@ -91,7 +91,8 @@ class MailHandler < ActionMailer::Base
     @handler_options = options
     sender_email = email.from.to_a.first.to_s.strip
     # Ignore emails received from the application emission address to avoid hell cycles
-    if sender_email.casecmp(Setting.mail_from.to_s.strip) == 0
+    emission_address = Setting.mail_from.to_s.gsub(/(?:.*<|>.*|\(.*\))/, '').strip
+    if sender_email.casecmp(emission_address) == 0
       if logger
         logger.info  "MailHandler: ignoring email from Redmine emission address [#{sender_email}]"
       end
@@ -130,7 +131,7 @@ class MailHandler < ActionMailer::Base
           end
           add_user_to_group(handler_options[:default_group])
           unless handler_options[:no_account_notice]
-            ::Mailer.account_information(@user, @user.password).deliver
+            ::Mailer.deliver_account_information(@user, @user.password)
           end
         else
           if logger
@@ -237,7 +238,7 @@ class MailHandler < ActionMailer::Base
     end
 
     # ignore CLI-supplied defaults for new issues
-    handler_options[:issue].clear
+    handler_options[:issue] = {}
 
     journal = issue.init_journal(user)
     if from_journal && from_journal.private_notes?
@@ -286,7 +287,7 @@ class MailHandler < ActionMailer::Base
         reply
       else
         if logger
-          logger.info "MailHandler: ignoring reply from [#{sender_email}] to a locked topic"
+          logger.info "MailHandler: ignoring reply from [#{email.from.first}] to a locked topic"
         end
       end
     end
@@ -310,7 +311,11 @@ class MailHandler < ActionMailer::Base
   def accept_attachment?(attachment)
     @excluded ||= Setting.mail_handler_excluded_filenames.to_s.split(',').map(&:strip).reject(&:blank?)
     @excluded.each do |pattern|
-      regexp = %r{\A#{Regexp.escape(pattern).gsub("\\*", ".*")}\z}i
+      if Setting.mail_handler_enable_regex_excluded_filenames?
+        regexp = %r{\A#{pattern}\z}i
+      else
+        regexp = %r{\A#{Regexp.escape(pattern).gsub("\\*", ".*")}\z}i
+      end
       if attachment.filename.to_s =~ regexp
         logger.info "MailHandler: ignoring attachment #{attachment.filename} matching #{pattern}"
         return false
@@ -425,7 +430,8 @@ class MailHandler < ActionMailer::Base
       'start_date' => get_keyword(:start_date, :format => '\d{4}-\d{2}-\d{2}'),
       'due_date' => get_keyword(:due_date, :format => '\d{4}-\d{2}-\d{2}'),
       'estimated_hours' => get_keyword(:estimated_hours),
-      'done_ratio' => get_keyword(:done_ratio, :format => '(\d|10)?0')
+      'done_ratio' => get_keyword(:done_ratio, :format => '(\d|10)?0'),
+      'parent_issue_id' => get_keyword(:parent_issue)
     }.delete_if {|k, v| v.blank? }
 
     attrs

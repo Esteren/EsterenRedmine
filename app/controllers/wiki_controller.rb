@@ -32,7 +32,7 @@
 class WikiController < ApplicationController
   default_search_scope :wiki_pages
   before_action :find_wiki, :authorize
-  before_action :find_existing_or_new_page, :only => [:show, :edit, :update]
+  before_action :find_existing_or_new_page, :only => [:show, :edit]
   before_action :find_existing_page, :only => [:rename, :protect, :history, :diff, :annotate, :add_attachment, :destroy, :destroy_version]
   before_action :find_attachments, :only => [:preview]
   accept_api_auth :index, :show, :update, :destroy
@@ -70,7 +70,7 @@ class WikiController < ApplicationController
       @page.title = '' unless editable?
       @page.validate
       if @page.errors[:title].blank?
-        path = project_wiki_page_path(@project, @page.title)
+        path = project_wiki_page_path(@project, @page.title, :parent => params[:parent])
         respond_to do |format|
           format.html { redirect_to path }
           format.js   { render :js => "window.location = #{path.to_json}" }
@@ -150,6 +150,8 @@ class WikiController < ApplicationController
 
   # Creates a new page or updates an existing one
   def update
+    @page = @wiki.find_or_new_page(params[:id])
+
     return render_403 unless editable?
     was_new_page = @page.new_record?
     @page.safe_attributes = params[:wiki_page]
@@ -321,7 +323,7 @@ class WikiController < ApplicationController
       @attachments += page.attachments
       @previewed = page.content
     end
-    @text = params[:content][:text]
+    @text = params[:content].present? ? params[:content][:text] : params[:text]
     render :partial => 'common/preview'
   end
 

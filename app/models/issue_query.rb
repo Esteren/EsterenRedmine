@@ -73,10 +73,10 @@ class IssueQuery < Query
     options[:draw_progress_line] = (arg == '1' ? '1' : nil)
   end
 
-  def build_from_params(params)
+  def build_from_params(params, defaults={})
     super
-    self.draw_relations = params[:draw_relations] || (params[:query] && params[:query][:draw_relations])
-    self.draw_progress_line = params[:draw_progress_line] || (params[:query] && params[:query][:draw_progress_line])
+    self.draw_relations = params[:draw_relations] || (params[:query] && params[:query][:draw_relations]) || options[:draw_relations]
+    self.draw_progress_line = params[:draw_progress_line] || (params[:query] && params[:query][:draw_progress_line]) || options[:draw_progress_line]
     self
   end
 
@@ -148,7 +148,7 @@ class IssueQuery < Query
 
     if User.current.logged?
       add_available_filter "watcher_id",
-        :type => :list, :values => [["<< #{l(:label_me)} >>", "me"]]
+        :type => :list, :values => lambda { watcher_values }
     end
 
     add_available_filter("updated_by",
@@ -164,6 +164,12 @@ class IssueQuery < Query
         :type => :list_subprojects,
         :values => lambda { subproject_values }
     end
+
+    add_available_filter("project.status",
+      :type => :list,
+      :name => l(:label_attribute_of_project, :name => l(:field_status)),
+      :values => lambda { project_statuses_values }
+    ) if project.nil? || !project.leaf?
 
     add_custom_fields_filters(issue_custom_fields)
     add_associations_custom_fields_filters :project, :author, :assigned_to, :fixed_version
@@ -373,7 +379,7 @@ class IssueQuery < Query
     neg = (operator == '!' ? 'NOT' : '')
     subquery = "SELECT 1 FROM #{Journal.table_name} sj" +
       " WHERE sj.journalized_type='Issue' AND sj.journalized_id=#{Issue.table_name}.id AND (#{sql_for_field field, '=', value, 'sj', 'user_id'})" +
-      " AND sj.id = (SELECT MAX(#{Journal.table_name}.id) FROM #{Journal.table_name}" +
+      " AND sj.id IN (SELECT MAX(#{Journal.table_name}.id) FROM #{Journal.table_name}" +
       "   WHERE #{Journal.table_name}.journalized_type='Issue' AND #{Journal.table_name}.journalized_id=#{Issue.table_name}.id" +
       "   AND (#{Journal.visible_notes_condition(User.current, :skip_pre_condition => true)}))"
 
@@ -577,12 +583,16 @@ class IssueQuery < Query
     "(#{sql})"
   end
 
+  def sql_for_project_status_field(field, operator, value, options={})
+    sql_for_field(field, operator, value, Project.table_name, "status")
+  end
+
   def find_assigned_to_id_filter_values(values)
     Principal.visible.where(:id => values).map {|p| [p.name, p.id.to_s]}
   end
   alias :find_author_id_filter_values :find_assigned_to_id_filter_values
 
-  IssueRelation::TYPES.keys.each do |relation_type|
+  IssueRelation::TYPES.each_key do |relation_type|
     alias_method "sql_for_#{relation_type}_field".to_sym, :sql_for_relations
   end
 

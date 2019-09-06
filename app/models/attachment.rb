@@ -28,7 +28,6 @@ class Attachment < ActiveRecord::Base
   validates_length_of :disk_filename, :maximum => 255
   validates_length_of :description, :maximum => 255
   validate :validate_max_file_size, :validate_file_extension
-  attr_protected :id
 
   acts_as_event :title => :filename,
                 :url => Proc.new {|o| {:controller => 'attachments', :action => 'show', :id => o.id, :filename => o.filename}}
@@ -236,7 +235,7 @@ class Attachment < ActiveRecord::Base
   end
 
   def is_text?
-    Redmine::MimeType.is_type?('text', filename)
+    Redmine::MimeType.is_type?('text', filename) || Redmine::SyntaxHighlighting.filename_supported?(filename)
   end
 
   def is_image?
@@ -251,8 +250,16 @@ class Attachment < ActiveRecord::Base
     Redmine::MimeType.of(filename) == "application/pdf"
   end
 
+  def is_video?
+    Redmine::MimeType.is_type?('video', filename)
+  end
+
+  def is_audio?
+    Redmine::MimeType.is_type?('audio', filename)
+  end
+
   def previewable?
-    is_text? || is_image?
+    is_text? || is_image? || is_video? || is_audio?
   end
 
   # Returns true if the file is readable
@@ -269,7 +276,7 @@ class Attachment < ActiveRecord::Base
   def self.find_by_token(token)
     if token.to_s =~ /^(\d+)\.([0-9a-f]+)$/
       attachment_id, attachment_digest = $1, $2
-      attachment = Attachment.where(:id => attachment_id, :digest => attachment_digest).first
+      attachment = Attachment.find_by(:id => attachment_id, :digest => attachment_digest)
       if attachment && attachment.container.nil?
         attachment
       end

@@ -1,31 +1,20 @@
 source 'https://rubygems.org'
 
-gem "bundler", ">= 1.5.0", "< 2.0.0"
+gem "bundler", ">= 1.5.0"
 
-gem "passenger", "~> 6.0"
-gem "rails", "4.2.11"
-gem "addressable", "2.4.0" if RUBY_VERSION < "2.0"
-if RUBY_VERSION < "2.1"
-  gem "public_suffix", (RUBY_VERSION < "2.0" ? "~> 1.4" : "~> 2.0.5")
-end
-gem "jquery-rails", "~> 3.1.4"
-gem "coderay", "~> 1.1.1"
+gem "rails", "5.2.3"
+gem "rouge", "~> 3.3.0"
 gem "request_store", "1.0.5"
-gem "mime-types", (RUBY_VERSION >= "2.0" ? "~> 3.0" : "~> 2.99")
-gem "protected_attributes"
+gem "mini_mime", "~> 1.0.1"
 gem "actionpack-xml_parser"
-gem "roadie-rails", "~> 1.1.1"
-gem "roadie", "~> 3.2.1"
+gem "roadie-rails", "~> 1.3.0"
 gem "mimemagic"
-gem "mail", "~> 2.6.4"
+gem "mail", "~> 2.7.1"
+gem "csv", "~> 3.0.1" if RUBY_VERSION >= "2.3" && RUBY_VERSION < "2.6"
 
-gem "nokogiri", (RUBY_VERSION >= "2.1" ? "~> 1.8.1" : "~> 1.6.8")
+gem "nokogiri", (RUBY_VERSION >= "2.3" ? "~> 1.10.0" : "~> 1.9.1")
 gem "i18n", "~> 0.7.0"
-gem "ffi", "1.9.14", :platforms => :mingw if RUBY_VERSION < "2.0"
 gem "xpath", "< 3.2.0" if RUBY_VERSION < "2.3"
-
-# Request at least rails-html-sanitizer 1.0.3 because of security advisories
-gem "rails-html-sanitizer", ">= 1.0.3"
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem 'tzinfo-data', platforms: [:mingw, :x64_mingw, :mswin]
@@ -66,14 +55,13 @@ if File.exist?(database_file)
     adapters.each do |adapter|
       case adapter
       when 'mysql2'
-        gem "mysql2", "~> 0.4.6", :platforms => [:mri, :mingw, :x64_mingw]
+        gem "mysql2", "~> 0.5.0", :platforms => [:mri, :mingw, :x64_mingw]
       when /postgresql/
-        gem "pg", "~> 0.18.1", :platforms => [:mri, :mingw, :x64_mingw]
+        gem "pg", "~> 1.1.4", :platforms => [:mri, :mingw, :x64_mingw]
       when /sqlite3/
-        gem "sqlite3", (RUBY_VERSION < "2.0" && RUBY_PLATFORM =~ /mingw/ ? "1.3.12" : "~>1.3.12"),
-                       :platforms => [:mri, :mingw, :x64_mingw]
+        gem "sqlite3", "~>1.3.12", :platforms => [:mri, :mingw, :x64_mingw]
       when /sqlserver/
-        gem "tiny_tds", (RUBY_VERSION >= "2.0" ? "~> 1.0.5" : "~> 0.7.0"), :platforms => [:mri, :mingw, :x64_mingw]
+        gem "tiny_tds", "~> 1.0.5", :platforms => [:mri, :mingw, :x64_mingw]
         gem "activerecord-sqlserver-adapter", :platforms => [:mri, :mingw, :x64_mingw]
       else
         warn("Unknown database adapter `#{adapter}` found in config/database.yml, use Gemfile.local to load your own database gems")
@@ -87,20 +75,17 @@ else
 end
 
 group :development do
-  gem "rdoc", "~> 4.3"
   gem "yard"
 end
 
 group :test do
-  gem "minitest"
   gem "rails-dom-testing"
   gem "mocha"
-  gem "simplecov", "~> 0.9.1", :require => false
-  # TODO: remove this after upgrading to Rails 5
-  gem "test_after_commit", "~> 0.4.2"
-  # For running UI tests
+  gem "simplecov", "~> 0.14.1", :require => false
+  # For running system tests
+  gem 'puma', '~> 3.7'
   gem "capybara", '~> 2.13'
-  gem "selenium-webdriver", "~> 2.53.4"
+  gem "selenium-webdriver"
 end
 
 local_gemfile = File.join(File.dirname(__FILE__), "Gemfile.local")

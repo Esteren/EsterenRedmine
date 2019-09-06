@@ -1,6 +1,0 @@
-# Russian strings go here for Rails i18n
-ru:
-  label_zen_placeholder: Оставьте комментарий
-  label_click_for_edit: Нажмите чтобы редактировать
-  label_unsaved_issue: У вас есть несохранённая задача. Хотите восстановить?
-  label_created_time: Создана %{value} назад

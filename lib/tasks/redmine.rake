@@ -15,6 +15,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+require "rake/testtask.rb"
+
 namespace :redmine do
   namespace :attachments do
     desc 'Removes uploaded files left unattached after one day.'
@@ -160,31 +162,27 @@ DESC
 
     namespace :test do
       desc 'Runs the plugins unit tests.'
-      Rake::TestTask.new :units => "db:test:prepare" do |t|
-        t.libs << "test"
-        t.verbose = true
-        t.pattern = "plugins/#{ENV['NAME'] || '*'}/test/unit/**/*_test.rb"
+      task :units => "db:test:prepare" do |t|
+        $: << "test"
+        Rails::TestUnit::Runner.rake_run ["plugins/#{ENV['NAME'] || '*'}/test/unit/**/*_test.rb"]
       end
 
       desc 'Runs the plugins functional tests.'
-      Rake::TestTask.new :functionals => "db:test:prepare" do |t|
-        t.libs << "test"
-        t.verbose = true
-        t.pattern = "plugins/#{ENV['NAME'] || '*'}/test/functional/**/*_test.rb"
+      task :functionals => "db:test:prepare" do |t|
+        $: << "test"
+        Rails::TestUnit::Runner.rake_run ["plugins/#{ENV['NAME'] || '*'}/test/functional/**/*_test.rb"]
       end
 
       desc 'Runs the plugins integration tests.'
-      Rake::TestTask.new :integration => "db:test:prepare" do |t|
-        t.libs << "test"
-        t.verbose = true
-        t.pattern = "plugins/#{ENV['NAME'] || '*'}/test/integration/**/*_test.rb"
+      task :integration => "db:test:prepare" do |t|
+        $: << "test"
+        Rails::TestUnit::Runner.rake_run ["plugins/#{ENV['NAME'] || '*'}/test/integration/**/*_test.rb"]
       end
 
       desc 'Runs the plugins ui tests.'
-      Rake::TestTask.new :ui => "db:test:prepare" do |t|
-        t.libs << "test"
-        t.verbose = true
-        t.pattern = "plugins/#{ENV['NAME'] || '*'}/test/ui/**/*_test.rb"
+      task :ui => "db:test:prepare" do |t|
+        $: << "test"
+        Rails::TestUnit::Runner.rake_run ["plugins/#{ENV['NAME'] || '*'}/test/ui/**/*_test.rb"]
       end
     end
   end
